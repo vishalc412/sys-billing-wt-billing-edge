@@ -1,0 +1,145 @@
+#%RAML 1.0 
+version: v1
+title: sapi-billing
+description: System API to call the BillingService SOAP web service.
+protocols: 
+  - HTTPS
+
+uses: 
+  myLib: exchange_modules/df664b46-69c5-4485-a356-8e70ce82203f/billing-objects/1.0.7/library/library.raml
+  
+types:
+  primaryAccount: !include dataTypes/primaryAccount.raml
+
+traits: 
+  commonErrors: !include exchange_modules/df664b46-69c5-4485-a356-8e70ce82203f/commonerrorresponses/1.0.5/commonerrorresponses.raml
+  environment: !include exchange_modules/df664b46-69c5-4485-a356-8e70ce82203f/commontraits/1.0.7/environmentQP.raml
+  secured: !include exchange_modules/df664b46-69c5-4485-a356-8e70ce82203f/commontraits/1.0.7/secured_bearer.raml
+    
+/info:
+  get:
+    is: [secured]
+    description: For build/pipeline purposes only
+/primaryAccount:
+  get:
+    is: [commonErrors, secured]
+    queryParameters:
+      billingAccountNumber:
+        type: string
+        minLength: 10
+        maxLength: 10
+        example: '1234567890'
+    responses:
+      200:
+        body:
+          application/json:
+            type: primaryAccount
+            example: !include Example/primaryAccount.json                     
+  /transactions:
+    get:
+      is: [commonErrors, secured]
+      queryParameters:
+        billingAccountNumber:
+          type: string
+          minLength: 10
+          maxLength: 10
+          example: '1234567890'
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include Example/primaryAccountTransactions.json
+  /policy:
+    /escrow:
+      /transactions:
+        get:
+          is: [commonErrors, secured]
+          queryParameters:
+            policyNumber:
+              type: string
+              minLength: 7
+              maxLength: 7
+            billingAccountNumber:
+              type: string
+              minLength: 10
+              maxLength: 10
+            policyVersion?:
+              type: string
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include Example/escrowTransactions.json
+/externalPrimaryAccount:
+  /{billingAccountNumber}:
+    uriParameters: 
+      billingAccountNumber:
+        type: string
+        minLength: 10
+        maxLength: 10
+        example: '1234567890'
+    /account-billing:
+      get:
+        is: [commonErrors, secured, environment]
+        responses: 
+          200:
+            body: 
+              application/json:
+                type: myLib.externalPrimaryAccount          
+  /{policyNumber}:
+    uriParameters: 
+      policyNumber:
+        type: string
+        minLength: 7
+        maxLength: 7
+        example: '1234567'
+    /policy-billing:
+      get:
+        is: [commonErrors, secured, environment]
+        responses: 
+          200:
+            body: 
+              application/json:
+                type: myLib.externalPrimaryAccount
+
+/pastDueToday:
+  /{agencyCode}:
+    uriParameters: 
+      agencyCode:
+        type: string
+        minLength: 1
+        maxLength: 7
+        example: '1234567'
+    get:
+        is: [commonErrors, secured, environment]
+        queryParameters:
+          subAgenciesIncluded:
+            type: string
+            required: false
+            example: true or false
+        responses: 
+          200:
+            body: 
+              application/json:
+                type: myLib.pastDueToday
+                
+/pendingCancelToday:
+  /{agencyCode}:
+    uriParameters: 
+      agencyCode:
+        type: string
+        minLength: 1
+        maxLength: 7
+        example: '1234567'
+    get:
+        is: [commonErrors, secured, environment]
+        queryParameters:
+          subAgenciesIncluded:
+            type: string
+            required: false
+            example: true or false
+        responses: 
+          200:
+            body: 
+              application/json:
+                type: myLib.pendingCancelToday

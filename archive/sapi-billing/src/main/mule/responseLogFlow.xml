@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="responseLogFlow" doc:id="0b16d55d-9529-4ccd-89de-9fe7379a0763" >
+		<json-logger:logger doc:name="RequestResponseLogger" doc:id="9e43a1b3-800f-4a01-80a3-0386ef9a0d99" config-ref="JSON_Logger_Config_CL" message="RequestResponseLogger" tracePoint="END" priority="INFO">
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule
+import * from dw::util::Timer
+output application/json
+
+var currentTimeMillis = currentMilliseconds()
+---
+vars.requestResponseLog ++ {
+	responseStatusCode:vars.httpStatus,
+	exitTimeMillis:currentTimeMillis,
+	entryExitElapsed: (currentTimeMillis - (vars.requestResponseLog.entryTimeMillis default 0))
+}]]]></json-logger:content>
+		</json-logger:logger>
+	</flow>
+	<flow name="setRequestResponse" doc:id="f63f623d-ad81-49ba-83fc-53f0bfb7bf0f" >
+		<set-variable value="#[%dw 2.0&#10;import * from dw::util::Timer&#10;import isAlpha from dw::core::Strings&#10;import substringAfter from dw::core::Strings&#10;import replaceAll from dw::core::Strings&#10;import isImpersonated from dwl::reqresImpersonateFun&#10;import buildactsub from dwl::reqresImpersonateFun&#10;import buildactEmail from dwl::reqresImpersonateFun&#10;import maskPath from dwl::reqresImpersonateFun&#10;output application/json&#10;---&#10;{&#10;	entryTimestamp: now(),&#10;	identifier: &quot;UWSAPI-REQRES&quot;,&#10;	api: p('api.name') ++ &quot;-&quot; ++ p('api.version'),&#10;	xApiKey: attributes.headers['x-api-key'] default &quot;EMPTY&quot;,&#10;	correlationId: (correlationId default &quot;EMPTY&quot;),&#10;	interactionCorrelationId: attributes.headers['x-interaction-correlation-id'] default &quot;EMPTY&quot;,&#10;	requestMethod: attributes.method,&#10;	requestTemplate: &quot;/&quot; ++ maskPath(attributes.requestPath),&#10;	requestUri: attributes.rawRequestUri,&#10;	apiLayer: 'SAPI',&#10;	sub: (authentication.properties.userProperties.sub default 'EMPTY'),&#10;	subEmail: (authentication.properties.userProperties.email default 'EMPTY'),&#10;	impersonated: isImpersonated(authentication),&#10;	act: buildactsub(authentication),&#10;	actEmail: buildactEmail(authentication),&#10;	clientId: authentication.properties.clientId,&#10;	entryTimeMillis: currentMilliseconds(),&#10;	agencyCode: (authentication.properties.userProperties.agencyCodes default [])&#10;}]" doc:name="Set requestResponseLog" doc:id="2adc054b-0fbb-4736-aa05-96110af85e8a" variableName="requestResponseLog" />
+	</flow>
+</mule>

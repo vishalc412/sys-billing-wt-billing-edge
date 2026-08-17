@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: billing-config
+data:
+  SERVER_PORT: "8081"
+  RESPONSE_TIMEOUT_MS: "10000"
+  PING_FED_PORT: "9543"
+  SAML_WSA_ADDRESS: "urn:sts:mulesoft:unt:to:saml:nonprod"
+  APP_LOG_LEVEL: "INFO"

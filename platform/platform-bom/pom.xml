@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <!-- Standalone on purpose: the root POM imports this BOM, so inheriting the root would be a cycle. -->
+  <groupId>com.westfield.api</groupId>
+  <artifactId>platform-bom</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>platform-bom</name>
+  <description>
+    The ONLY allowed dependency set (ADR-0044). A module needing something outside this file raises
+    an ADR; it does not add a dependency. Enforced by the dependency check in .github/workflows/ci.yml.
+    Deliberately absent, each for a recorded reason:
+      - any JMS / IBM MQ client                    ADR-0040
+      - MapStruct                                  ADR-0003
+      - any rules engine                           ADR-0003
+      - resilience4j retry                         ADR-0009, ADR-0014 (no retry at cutover)
+      - caffeine / any request-path cache          ADR-0002 (the SAML cache of ADR-0007 is in-module)
+      - any generated JAX-WS / CXF SOAP stack      ADR-0006 (no WSDL exists)
+  </description>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.westfield.api</groupId>
+        <artifactId>platform-spi</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.westfield.api</groupId>
+        <artifactId>platform-observability</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.westfield.api</groupId>
+        <artifactId>platform-errors</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.westfield.api</groupId>
+        <artifactId>platform-testing</artifactId>
+        <version>${project.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.westfield.api</groupId>
+        <artifactId>billing-account</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.westfield.api</groupId>
+        <artifactId>billing-agency</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.tngtech.archunit</groupId>
+        <artifactId>archunit-junit5</artifactId>
+        <version>1.3.0</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.wiremock</groupId>
+        <artifactId>wiremock-standalone</artifactId>
+        <version>3.9.1</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>1.20.4</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>

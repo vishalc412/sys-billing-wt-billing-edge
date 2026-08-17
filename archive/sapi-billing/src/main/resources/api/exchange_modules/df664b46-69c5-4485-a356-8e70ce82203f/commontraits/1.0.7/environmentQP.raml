@@ -1,0 +1,7 @@
+#%RAML 1.0 Trait
+queryParameters: 
+  environment:
+    type: string 
+    enum: [DEV, QA, QAN, SIT, STAGE, PERF, PROD]
+    required: true
+    description: the backend environment to be called

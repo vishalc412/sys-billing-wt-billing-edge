@@ -1,0 +1,284 @@
+<!-- [STUDIO:"Transform Message"]<?xml version="1.0" encoding="UTF-8"?> [STUDIO] -->
+
+<mule xmlns:module-pingfed="http://www.mulesoft.org/schema/mule/module-pingfed" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:ibm-mq="http://www.mulesoft.org/schema/mule/ibm-mq"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ibm-mq http://www.mulesoft.org/schema/mule/ibm-mq/current/mule-ibm-mq.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/module-pingfed http://www.mulesoft.org/schema/mule/module-pingfed/current/mule-module-pingfed.xsd">
+	<flow name="AccountDetailsFlow" doc:id="3c5890d9-0427-4fe0-a28c-655517ab4cd6" >
+		<flow-ref doc:name="GetSAMLTokenResponse" doc:id="370468a0-1089-4cc6-a5b6-0f25159b48c6" name="GetSAMLToken" target="samlResponse" />
+		<ee:transform doc:name="external primary account request" doc:id="897c05b5-291e-492b-afd1-5484b2f55e24">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml indent=false, writeDeclaration=false, skipNullOn="everywhere" 
+ns soapenv http://schemas.xmlsoap.org/soap/envelope/
+ns wsse http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+ns saml urn:oasis:names:tc:SAML:2.0:assertion
+---
+{
+    soapenv#Envelope: {
+    	soapenv#Header: {
+			wsse#Security @(soapenv#mustUnderstand: "1") : {
+            saml#Assertion @(ID: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@ID , IssueInstant: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@IssueInstant ,
+Version: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@Version): vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion
+            }
+        },
+        soapenv#Body: {
+            ExternalPrimaryAccountRequest @(xmlns: "http://www.westfieldgrp.com/billing"): 
+            	{
+                    policyNumber: vars.params.policyNumber,
+               		accountNumber: vars.params.billingAccountNumber,
+               		accountFeatures : "PastDue"
+               	}
+         }
+           	
+       }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="Logger" doc:id="501fc578-5d3d-4734-ad01-ffc1f117a0c4" message="Soap Request" config-ref="JSON_Logger_Config">
+			<json-logger:content ><![CDATA[#[payload]]]></json-logger:content>
+		</json-logger:logger>
+		<http:request method="POST" doc:name="BillingService" doc:id="1a06ae2c-2355-443c-adc0-b99ed5e4ad8a" config-ref="HTTP_Request_configuration" path="/Billing/BillingService" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "*/*"
+}]]]></http:headers>
+		</http:request>
+		<choice doc:name="Choice" doc:id="3602d968-4b66-4e5d-a52b-df734c78a0df" >
+			<when expression="#[payload.Envelope.Body.ExternalPrimaryAccountResponse?]" >
+				<ee:transform doc:name="transform output" doc:id="9c3c1774-ed0c-4f88-baa6-18bc1e08db06" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var body = payload.Envelope.Body.ExternalPrimaryAccountResponse
+---
+ (body filterObject ((value, key) -> (key as String != "policyNumbers")) )
+ ++ { "policyNumbers": (body..*policyNumbers) default [] }]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="200" doc:name="set httpStatus 200" doc:id="5b420f49-0184-4a61-88a6-d38a4b76adcf" variableName="httpStatus" />
+			</when>
+			<otherwise >
+				<set-variable value="204" doc:name="set http status 204" doc:id="41b16910-0878-434c-967f-4606bc41c20b" variableName="httpStatus" />
+			</otherwise>
+		</choice>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="361aeffa-4f4b-4289-9d12-2fdc37440ec4" >
+				<choice doc:name="Choice" doc:id="0dc03ca0-2af5-4c9f-bff9-2513bebd9e31" >
+					<when expression='#[(error.muleMessage.typedValue.Envelope.Body.Fault.detail.ErrorInfo.errorCode == "204") and (error.muleMessage.typedValue.Envelope.Body.Fault.faultstring contains("Account not found"))]'>
+						<json-logger:logger doc:name="log fault" doc:id="8faa9e4e-4ef9-482c-8d43-c3a1d93c542f" config-ref="JSON_Logger_Config" message="Error Detected: Account not found" tracePoint="EXCEPTION" priority="ERROR">
+							<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(error.muleMessage.typedValue) 
+}]]]></json-logger:content>
+						</json-logger:logger>
+						<set-variable value="204" doc:name="httpStatus" doc:id="98110604-3e0a-4153-afe0-f9e1d89982b9" variableName="httpStatus"/>
+					</when>
+					<otherwise >
+						<flow-ref doc:name="error_Flow" doc:id="b571abc5-6506-4ce9-928d-3be52b58c09d" name="error_Flow" />
+					</otherwise>
+				</choice>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="get-past-due-today-flow" doc:id="5adf25f4-a8cd-4e12-be06-11b7ad8a4f01" >
+		<flow-ref doc:name="GetSAMLTokenResponse" doc:id="b45bafd7-5fe9-41af-85c5-c189ceca7cef" name="GetSAMLToken" target="samlResponse"/>
+		<ee:transform doc:name="past due date today request" doc:id="7205ff61-13b7-45e8-9e2c-7acaa8f0813a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml indent=false, writeDeclaration=false, skipNullOn="everywhere" 
+ns soapenv http://schemas.xmlsoap.org/soap/envelope/
+ns wsse http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+ns saml urn:oasis:names:tc:SAML:2.0:assertion
+
+---
+{
+    soapenv#Envelope: {
+    	soapenv#Header: {
+			wsse#Security @(soapenv#mustUnderstand: "1") : {
+            saml#Assertion @(ID: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@ID , IssueInstant: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@IssueInstant ,
+Version: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@Version): vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion
+            }
+        },
+        soapenv#Body: {
+            PastDueTodayRequest @(xmlns: "http://www.westfieldgrp.com/billing"): 
+            	{
+                    agencyCode: vars.agencyCode,
+                    subAgenciesIncluded: vars.subAgenciesIncluded
+               	}
+         }
+           	
+       }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="PastDueDate Before call billing service Logger" doc:id="64957aee-52a8-4700-993b-7477467f6a5c" message="PastDueToday Soap Request" config-ref="JSON_Logger_Config">
+			<json-logger:content><![CDATA[#[payload]]]></json-logger:content>
+		</json-logger:logger>
+		<http:request method="POST" doc:name="PastDueTodayRequest" doc:id="0b38c55c-3cb1-4d62-b03a-07b31ab8b312" config-ref="HTTP_Request_configuration" path="/Billing/BillingService">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "*/*"
+}]]]></http:headers>
+		</http:request>
+		<json-logger:logger doc:name="PastDueDate Before call billing service Logger" doc:id="6c5a68bf-0f99-4277-b473-3fa67f0231f8" message="PastDueToday Soap Request" config-ref="JSON_Logger_Config">
+			<json-logger:content><![CDATA[#[payload]]]></json-logger:content>
+		</json-logger:logger>
+		<choice doc:name="Choice" doc:id="651c0582-930c-4bd3-9001-88d77815d888" >
+			<when expression="#[payload.Envelope.Body.PastDueTodayResponse.pastDues?]">
+				<ee:transform doc:name="transform output" doc:id="1b2203ea-8acb-494d-9985-0aecb447dd67">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload.Envelope.Body.PastDueTodayResponse.*pastDues map {
+    policyNumber: $.pastDueInformation.policyNumber,
+ namedInsured: {
+     name:$.billToContact.name,
+     addressLine1:$.billToContact.addressLine1,
+     addressLine2:$.billToContact.addressLine2,
+     city:$.billToContact.city,
+     state:$.billToContact.state,
+      zip: $.billToContact.zip
+
+ },
+ overDueAmount:$.pastDueInformation.minimumAmountWithOutFees as Number as String {format:"0.00"},
+ dueDate: $.pastDueInformation.dueDate
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<set-variable value="200" doc:name="Set httpstatus 200" doc:id="81a3c517-f2d3-4372-8961-0b779531e5fa" variableName="httpStatus"/>
+			</when>
+			<otherwise >
+				<set-variable value="204" doc:name="Set http status 204" doc:id="9a94a190-787b-48c0-9388-9a611b04b637" variableName="httpStatus"/>
+			</otherwise>
+		</choice>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e29005c9-7df4-4b63-8542-9ce7f4dde13d" >
+				<flow-ref doc:name="error_Flow" doc:id="8374b6b6-58bb-4215-b2ae-ee8a81c0e4d2" name="error_Flow"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="get-pending-cancellation-today-flow" doc:id="d6734918-290e-4cfe-a8a0-0ffaca700150" >
+		<flow-ref doc:name="GetSAMLTokenResponse" doc:id="358abcdc-dfc6-4e76-85ba-7b1628635ad0" name="GetSAMLToken" target="samlResponse" />
+		<ee:transform doc:name="pending cancellation today request" doc:id="32ff09e5-c8f9-4d67-a622-b9ee7830de19" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml indent=false, writeDeclaration=false, skipNullOn="everywhere" 
+ns soapenv http://schemas.xmlsoap.org/soap/envelope/
+ns wsse http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+ns saml urn:oasis:names:tc:SAML:2.0:assertion
+
+---
+{
+    soapenv#Envelope: {
+    	soapenv#Header: {
+			wsse#Security @(soapenv#mustUnderstand: "1") : {
+            saml#Assertion @(ID: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@ID , IssueInstant: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@IssueInstant ,
+Version: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@Version): vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion
+            }
+        },
+        soapenv#Body: {
+            PendingCancellationsTodayRequest @(xmlns: "http://www.westfieldgrp.com/billing"): 
+            	{
+                    agencyCode: vars.agencyCode,
+                    subAgenciesIncluded: vars.subAgenciesIncluded
+               	}
+         }
+           	
+       }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="Pending cancellation today Before call billing service Logger" doc:id="1d0e1ce5-afcb-4671-abec-c3f4342544bf" message="PastDueToday Soap Request" config-ref="JSON_Logger_Config">
+			<json-logger:content><![CDATA[#[payload]]]></json-logger:content>
+		</json-logger:logger>
+		<http:request method="POST" doc:name="PendingCancellationsTodayRequest" doc:id="b4ea3317-8294-4d4e-a2e6-7e49bbaad4b7" config-ref="HTTP_Request_configuration" path="/Billing/BillingService">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "*/*"
+}]]]></http:headers>
+		</http:request>
+		<json-logger:logger doc:name="Pending cancellation today Before call billing service Logger" doc:id="a5b2c0f8-d313-469a-b3af-76ad5ee08ba4" message="PastDueToday Soap Request" config-ref="JSON_Logger_Config">
+			<json-logger:content ><![CDATA[#[payload]]]></json-logger:content>
+		</json-logger:logger>
+		<choice doc:name="Choice" doc:id="fcf457c6-d9e5-430a-a0da-5efcb0ae2ec2" >
+			<when expression="#[payload.Envelope.Body.PendingCancellationsTodayResponse.pendingCancellations?]">
+				<ee:transform doc:name="‌transform output" doc:id="48e42c02-cf64-4649-a8ad-99cbddb24d19">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload.Envelope.Body.PendingCancellationsTodayResponse.*pendingCancellations map {
+    policyNumber: $.pendingCancelInfo.policyNumber,
+    namedInsured: 
+    {
+        name:$.billToContact.name,
+        addressLine1: $.billToContact.addressLine1,
+        addressLine2: $.billToContact.addressLine2,
+        city:$.billToContact.city ,
+        state: $.billToContact.state,
+        zip: $.billToContact.zip
+    },
+    overDueAmount: $.pendingCancelInfo.minimumAmountWithOutFees as Number as String {format:"0.00"},
+    cancelDate: $.pendingCancelInfo.tentativeCancelDate
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<set-variable value="200" doc:name="Set httpStatus 200" doc:id="29d04fea-0966-4f47-8266-9964683ef114" variableName="httpStatus"/>
+			</when>
+			<otherwise >
+				<set-variable value="204" doc:name="Set http status 204" doc:id="7a391a3a-4bf9-412c-8181-0684a1ca6c32" variableName="httpStatus"/>
+			</otherwise>
+		</choice>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8ce3d7f0-59ba-402b-9ad3-59f1932328c0" >
+				<flow-ref doc:name="error_Flow" doc:id="3f5cb678-6dbb-4976-b965-465f1baf92d3" name="error_Flow"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<sub-flow name="error_Flow" doc:id="a8cf0c50-2446-4d9a-94a7-e91feb6dcb24" >
+		<ee:transform doc:name="defaultError" doc:id="a13b391c-ccd8-4781-a951-88d0583b8e3f">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{	
+	faultActor: p("api.name"),
+	errorDesc: error.description,
+	errorType: error.errorType ,
+	errorCause: error.cause,
+	correlationId: correlationId
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<set-variable value="#[error.muleMessage.typedAttributes.statusCode as Number default 500 as Number]" doc:name="httpStatus" doc:id="5b776428-bec3-438c-bfa5-438ad9d6e4bd" variableName="httpStatus" />
+		<json-logger:logger doc:name="Error Logger" doc:id="2dd4afea-2758-4fb9-8e51-b4f4e1466ef0" message="Error Detected" tracePoint="EXCEPTION" priority="ERROR" config-ref="JSON_Logger_Config">
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+	</sub-flow>
+	<sub-flow name="GetSAMLToken" doc:id="f790f31b-d8fb-4168-9a97-9256c92fdef4" >
+		<ee:transform doc:name="thycotic credentilas" doc:id="c45735f8-4ad2-44be-946f-8dcc75da955e" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="userName" ><![CDATA[p('thycotic-secret::billing.username')
+]]></ee:set-variable>
+				<ee:set-variable variableName="password" ><![CDATA[ p('thycotic-secret::billing.password')]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<module-pingfed:generate-saml doc:name="Generate saml for Billing Api" doc:id="41546800-9754-4398-bf0c-597813d1aa88" config-ref="PingFed_Config" userName="#[vars.userName]" password="#[vars.password]" wsa_Address="${saml.wsa.address}"/>
+	</sub-flow>
+	
+</mule>

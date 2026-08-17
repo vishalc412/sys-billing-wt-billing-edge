@@ -1,0 +1,30 @@
+parameters:
+  - name: environment
+    displayName: 'Select Environment'
+    type: string
+    default: 'Dev'
+    values:
+      - 'Dev'
+#      - 'Test'
+#      - 'Stage'
+  
+trigger: 
+ - v1-master
+
+resources:
+  repositories:
+    - repository: DevSecOps
+      type: git
+      name: DevSecOps/pipeline-as-a-service
+
+
+extends:
+  template: Azure_Pipeline_Templates/Mule/MulePipelineTemplate.yml@DevSecOps
+  parameters:
+    BuildNum: 77
+    environment: ${{parameters.environment}}
+    MavenGoal: 'clean package -U -DskipMunitTests -DinjectedGitCommitHash=$(Build.SourceVersion) -DinjectedBuildName=$(build.BuildNumber) -DinjectedBuildNumber=$(build.increaseBuild) -DinjectedOtherBuildInfo=Repo:$(Build.Repository.Name)__Branch:$(Build.SourceBranchName)'
+    MavenPom: 'pom.xml'
+
+name: BUILD=$(build.increaseBuild)_$(SourceBranchName)_$(Date:yyyyMMdd_HHmmss)
+

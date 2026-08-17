@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:request-config name="HTTP_Request_config_PrimaryAccount" doc:name="HTTP Request configuration" doc:id="afb14b44-63b7-4661-98eb-2d174eb4ba78" >
+		<http:request-connection host="${primaryAccount.host}" protocol="HTTPS" tlsContext="TLS_Context_Request"/>
+	</http:request-config>
+	<sub-flow name="mapResponsePayload" doc:id="ab9c1619-15b9-4add-8882-6c78ddeea0e6" >
+		<set-variable value="#[%dw 2.0&#10;/*&#10; * The XML returned from the BillingService is not well formed (multiple tags at the same level, etc).&#10; * &#10; * This setVariable converts the xml to json and transforms the duplicate tags into an array.&#10; * &#10; * reference: https://help.salesforce.com/s/articleView?id=001116941&amp;type=1&#10; */&#10;output application/json duplicateKeyAsArray=true&#10;---&#10;payload.Envelope.Body.PrimaryAccountResponse]" doc:name="convertXMLToJSON" doc:id="36cc6bde-dd6c-486e-b037-1b5e0b89094f" variableName="billingResponsePayload" />
+		<choice doc:name="Choice DC or BCMS" doc:id="18a69dec-1f97-44ab-a413-2eff42e6d23d" >
+			<when expression='#[vars.billingAccountNumber startsWith "6000"]'>
+				<ee:transform doc:name="mapFields" doc:id="f70f34f8-54c9-46b0-8fa4-08c3f400694f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+var billingData= vars.billingResponsePayload 
+var escrow=vars.billingResponsePayload.primaryAccount.policies
+
+fun mapEscrow(isEscrow)= isEscrow map ((item, index) -> {
+    "policyNumber": item.policyNumber,
+    "hasEscrow": item.policyTerm.escrowAccount?,
+    "billingStatus": if (item.policyTerm is Array) item.policyTerm[sizeOf(item.policyTerm) - 1].status
+                     else item.policyTerm.status
+})
+//formatting, to get numbers properly formatted to #.## takes a bit of mumbo jumbo
+// as Number as String {format:"0.00"} as Number
+fun mapbillTocontact(billTocontact)=(
+	{
+		"name": billTocontact.name,
+        "address":{
+            "street": billTocontact.addressLine1,
+            "city":billTocontact.city,
+            "state":billTocontact.state,
+            "zip": billTocontact.zip
+        }
+		
+	}
+)
+---
+{
+    "accountBalance": billingData.primaryAccount.accountBalance as Number as String {format:"0.00"} as Number default null,
+    "accountNumber": billingData.primaryAccount.accountNumber,
+    "billTocontact": mapbillTocontact(billingData.primaryAccount.billTocontact),
+    "billingSystemCode":billingData.primaryAccount.billingSystemCode,
+    "billType":billingData.primaryAccount.billType,
+    "dueAmount":billingData.primaryAccount.currentAmountDue as Number as String {format: "0.00"} as Number  default null,
+    "dueDate":billingData.primaryAccount.currentAmountDueDate ,
+    "dateBilled":billingData.primaryAccount.dateBilled,
+    "lastPaymentAmount":billingData.primaryAccount.lastPaymentReceived as Number as String {format: "0.00"} as Number  default null,
+    "lastPaymentDate":billingData.primaryAccount.lastPaymentReceivedDate,
+    "eft":billingData.primaryAccount.eftEstablished,
+    "pastDueAmount":billingData.primaryAccount.pastDueAmount as Number as String {format: "0.00"} as Number default null,
+    "pastDueDate":billingData.primaryAccount.pastDueDate,
+    "policies": if(typeOf(escrow) matches "Object") mapEscrow([escrow]) else mapEscrow(escrow)
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="mapFields" doc:id="da18482c-4be1-4f68-9512-ade575015979">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+var billingData= vars.billingResponsePayload 
+var escrow=vars.billingResponsePayload.primaryAccount.policies
+
+fun mapEscrow(isEscrow)= isEscrow map ((item, index) -> {
+    "policyNumber": item.policyNumber,
+    "hasEscrow": item.policyTerm.escrowAccount?,
+    "billingStatus": item.policyTerm.status
+})
+//formatting, to get numbers properly formatted to #.## takes a bit of mumbo jumbo
+// as Number as String {format:"0.00"} as Number
+fun mapbillTocontact(billTocontact)=(
+	{
+		"name": billTocontact.name,
+        "address":{
+            "street": billTocontact.addressLine1,
+            "city":billTocontact.city,
+            "state":billTocontact.state,
+            "zip": billTocontact.zip
+        }
+		
+	}
+)
+---
+{
+    "accountBalance": billingData.primaryAccount.accountBalance as Number as String {format:"0.00"} as Number default null,
+    "accountNumber": billingData.primaryAccount.accountNumber,
+    "billTocontact": mapbillTocontact(billingData.primaryAccount.billTocontact),
+    "billingSystemCode":billingData.primaryAccount.billingSystemCode,
+    "billType":billingData.primaryAccount.billType,
+    "dueAmount":billingData.primaryAccount.currentAmountDue as Number as String {format: "0.00"} as Number  default null,
+    "dueDate":billingData.primaryAccount.currentAmountDueDate ,
+    "dateBilled":billingData.primaryAccount.dateBilled,
+    "lastPaymentAmount":billingData.primaryAccount.lastPaymentReceived as Number as String {format: "0.00"} as Number  default null,
+    "lastPaymentDate":billingData.primaryAccount.lastPaymentReceivedDate,
+    "eft":billingData.primaryAccount.eftEstablished,
+    "pastDueAmount":billingData.primaryAccount.pastDueAmount as Number as String {format: "0.00"} as Number default null,
+    "pastDueDate":billingData.primaryAccount.pastDueDate,
+    "policies": if(typeOf(escrow) matches "Object") mapEscrow([escrow]) else mapEscrow(escrow)
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="callBillingService-primaryAccount" doc:id="4df0c34e-c676-4442-838a-449cb66c3485" >
+		<ee:transform doc:name="storing queryParams" doc:id="1dbbf1d5-70f2-49f6-b7c6-fc58d9332742">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="billingAccountNumber"><![CDATA[attributes.queryParams.billingAccountNumber]]></ee:set-variable>
+				<ee:set-variable variableName="policyNumber" ><![CDATA[attributes.queryParams.policyNumber default null]]></ee:set-variable>
+				<ee:set-variable variableName="policyVersion" ><![CDATA[attributes.queryParams.policyVersion default null]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="GetSAMLTokenResponse" doc:id="24b4657d-39bc-4ebe-bacd-8b563cedd637" name="GetSAMLToken" target="samlResponse" />
+		<ee:transform doc:name="payload for Billing call" doc:id="a27955b6-dfb0-4ca3-a7d0-abcc83a106af">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/xml indent = false, writeDeclaration = false
+ns soapenv http://schemas.xmlsoap.org/soap/envelope/
+ns wfesb http://www.westfieldgrp.com/wfesb-instance
+ns wsse http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+ns saml urn:oasis:names:tc:SAML:2.0:assertion
+---
+soapenv#Envelope: {
+	soapenv#Header: {
+		wsse#Security @(soapenv#mustUnderstand: "1") : {
+            saml#Assertion @(ID: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@ID , IssueInstant: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@IssueInstant ,
+Version: vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion.@Version): vars.samlResponse.Envelope.Body.RequestSecurityTokenResponseCollection.RequestSecurityTokenResponse.RequestedSecurityToken.Assertion
+            },
+		wfesb#Header: {
+			wfesb#HeaderVersion: "1.0",
+			wfesb#RequestProvider: {
+				wfesb#ServiceName: "Billing.primaryAccount",
+				wfesb#ServiceVersion: "1.1"
+			},
+			wfesb#RequestFormat: {
+				wfesb#Dialect: "Billing",
+				wfesb#Version: "1.0"
+			},
+			wfesb#GlobalTransactionID: {
+				wfesb#ConsumerTransactionID: correlationId
+			}
+		}
+	},
+	soapenv#Body: {
+		PrimaryAccountRequest @(xmlns: "http://www.westfieldgrp.com/billing"): {
+			accountNumber: vars.billingAccountNumber,
+			policyNumber: if (vars.policyNumber?) vars.policyNumber else "",
+    		policyVersion: if (vars.policyVersion?) vars.policyVersion else ""
+			
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+			</ee:variables>
+		</ee:transform>
+		<json-logger:logger doc:name="Before billing call" doc:id="d8bbae4c-ea15-438a-881d-361a95a9a74e" config-ref="JSON_Logger_Config" message='#["SB-PA-A: Before billing call for billingAccountNumber: "++ vars.billingAccountNumber default "EMPTY"]' priority="INFO" tracePoint="BEFORE_REQUEST" />
+		<http:request method="POST" doc:name="BillingService" doc:id="a3fa4438-8b6c-44ca-bb56-e50963e1324d" path="${primaryAccount.path}" config-ref="HTTP_Request_config_PrimaryAccount">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/xml"
+}]]]></http:headers>
+		</http:request>
+		<json-logger:logger doc:name="After billing call" doc:id="9a4c6f02-ca45-47a7-86b9-09500696befc" config-ref="JSON_Logger_Config" message='SB-PA-B: After billing call' priority="INFO" tracePoint="AFTER_REQUEST" >
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule
+import * from dw::util::Timer
+output application/json
+
+var currentTimeMillis = currentMilliseconds()
+---
+{
+	identifier:"BSC-01",
+	isDuckcreek: (vars.billingAccountNumber startsWith "6000"),
+	billingAccountNumber: vars.billingAccountNumber,
+	elapsed: (currentTimeMillis - (vars.requestResponseLog.entryTimeMillis default 0))
+}]]]></json-logger:content>
+		</json-logger:logger>
+	</sub-flow>
+	<sub-flow name="primaryAccount-exceptionHandling" doc:id="3d09aa4d-ae20-4ee1-a852-68928a2b7e5e" >
+		<choice doc:name="Choice" doc:id="75d851ca-4076-48b4-bad3-91f88482506a">
+					<when expression='#[(error.muleMessage.typedValue.Envelope.Body.Fault.detail.ErrorInfo.errorCode == "204") and (error.muleMessage.typedValue.Envelope.Body.Fault.faultstring contains("Account not found"))]'>
+						<json-logger:logger doc:name="log fault" doc:id="b0025d07-894f-4aa6-9fd0-4cd44ca84688" config-ref="JSON_Logger_Config" message="SB-PA-C: Error Detected: Account not found" tracePoint="EXCEPTION" priority="ERROR">
+							<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(error.muleMessage.typedValue) 
+}]]]></json-logger:content>
+						</json-logger:logger>
+						<set-variable value="204" doc:name="httpStatus" doc:id="6bd79cae-bab1-4b59-94b2-208b29099c74" variableName="httpStatus" />
+					</when>
+					<otherwise>
+						<flow-ref doc:name="error_Flow" doc:id="90dfe674-2110-44b4-b6d2-00cf4a0d5b58" name="error_Flow" />
+					</otherwise>
+				</choice>
+	</sub-flow>
+	<flow name="primaryAccount-implementation" doc:id="02ed6cbe-7967-426d-abff-4d4b0e23898c" >
+		<flow-ref doc:name="callBillingService-primaryAccount" doc:id="ae85804c-b633-4e7e-a2ea-4f695b18550a" name="callBillingService-primaryAccount"/>
+		<choice doc:name="Choice" doc:id="af0f1671-72b3-49c0-adb9-f3b5437324d7">
+			<when expression="#[payload.Envelope.Body.PrimaryAccountResponse?]">
+				<flow-ref doc:name="mapResponsePayload" doc:id="02432fe4-3658-4d92-84f4-d15f65425946" name="mapResponsePayload"/>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set httpStatus" doc:id="8b38057c-cd17-4274-a0f5-10dbd008600a">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus"><![CDATA[204]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e00b3e16-c5b6-41fd-9c76-243ee8f42fed" >
+				<flow-ref doc:name="call primaryAccount-exceptionHandling" doc:id="6243d1d1-afa8-42d0-b3c2-f9ddfa0237ba" name="primaryAccount-exceptionHandling"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

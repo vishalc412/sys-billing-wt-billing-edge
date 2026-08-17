@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<flow name="transactions-implementation" doc:id="f7ed28a9-05c6-4dea-b8a0-d78d89dba85c" >
+		<flow-ref doc:name="callBillingService-primaryAccount" doc:id="1da0fc92-06bf-4eaa-87eb-600e02587c30" name="callBillingService-primaryAccount" />
+		<choice doc:name="Choice" doc:id="1f75d287-eaa1-4798-9db3-17093b8c6dad" >
+			<when expression="#[payload.Envelope.Body.PrimaryAccountResponse?]" >
+				<flow-ref doc:name="transactionResponse" doc:id="d6d8efdf-cc11-4b42-ba8e-4a065554ed5f" name="transactionResponse" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Set httpStatus and Payload" doc:id="602a9be2-2e5d-4fe5-8591-b70e2112a3ee" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[]]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[200]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="6d182da0-e906-449c-af4b-1be50edfd6bc" >
+				<choice doc:name="Choice" doc:id="bb3c92fc-744e-4e71-b6c3-91eb9478893d" >
+					<when expression='#[(error.muleMessage.typedValue.Envelope.Body.Fault.detail.ErrorInfo.errorCode == "204") and (error.muleMessage.typedValue.Envelope.Body.Fault.faultstring contains("Account not found"))]' >
+						<json-logger:logger doc:name="log fault" doc:id="706f5060-eb62-4d00-b813-272a53635de4" config-ref="JSON_Logger_Config" message="SB-PAT-C: Error Detected: Account not found" tracePoint="EXCEPTION" priority="ERROR" >
+							<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(error.muleMessage.typedValue) 
+}]]]></json-logger:content>
+						</json-logger:logger>
+						<ee:transform doc:name="Set httpStatus and Payload" doc:id="4268ccc6-9da6-4790-ac9f-5cc2031a46ca" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[]]]></ee:set-payload>
+							</ee:message>
+							<ee:variables >
+								<ee:set-variable variableName="httpStatus" ><![CDATA[200]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+					</when>
+					<otherwise >
+						<flow-ref doc:name="error_Flow" doc:id="abc91318-ca19-4318-aa2c-1ed10c9a472a" name="error_Flow" />
+					</otherwise>
+				</choice>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<sub-flow name="transactionResponse" doc:id="26e7a316-8416-401c-98b3-fc2ac18eac2a" >
+		<set-variable value="#[%dw 2.0&#10;/*&#10; * The XML returned from the BillingService is not well formed (multiple tags at the same level, etc).&#10; * &#10; * This setVariable converts the xml to json and transforms the duplicate tags into an array.&#10; * &#10; * reference: https://help.salesforce.com/s/articleView?id=001116941&amp;type=1&#10; */&#10;output application/json duplicateKeyAsArray=true&#10;---&#10;payload.Envelope.Body.PrimaryAccountResponse]" doc:name="convertXMLToJSON" doc:id="7c67d196-7eae-4a86-9461-826e881aa183" variableName="billingResponsePayload" />
+		<ee:transform doc:name="mapFields" doc:id="817e0aa1-e6f8-42ba-a5be-7410fdbd4282" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+var billingData= vars.billingResponsePayload 
+
+//formatting, to get numbers properly formatted to #.## takes a bit of mumbo jumbo
+// as Number as String {format:"0.00"} as Number
+
+//to check typeOf transaction
+fun checkTransactionType(transactionsData)=(
+    if ((typeOf(transactionsData)) contains "Object")
+    	//wrap in [] to make it an array
+    	mapTransactions([transactionsData])
+    else if ((typeOf(transactionsData)) contains "Array")
+    	mapTransactions(transactionsData)
+    else
+    	[]
+)
+
+//the response from Billing has a lot of fields on each transaction. Only map the ones we want.
+fun mapTransactions(transactions) = (
+    transactions map (
+        {
+            "amountDue": $.amountDue as Number as String {format: "0.00"} as Number default null,
+            "description":$.description,
+            "dueDate": $.dueDate,
+            "processingDate": $.processingDate
+        }
+    )
+)
+---
+checkTransactionType(billingData.primaryAccount.transactions)
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

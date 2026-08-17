@@ -1,0 +1,109 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: sys-billing
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH_ISSUER_URI:}
+          jwk-set-uri: ${OAUTH_JWK_SET_URI:}
+  cache:
+    cache-names: primaryAccount,pastDueToday,pendingCancelToday,externalPrimaryAccount
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=60s
+
+# app.* mirrors the sapi-billing Mule properties (dev/test/stage/perf/prod.properties + secure-*.properties).
+# See CONFIG_MAPPING notes in generated/sys/report.md for the full property-by-property mapping.
+app:
+  primary-account:
+    scheme: https
+    host: ${PRIMARY_ACCOUNT_HOST:dev5esb.westfieldgrp.corp}
+    port: ${PRIMARY_ACCOUNT_PORT:443}
+    path: ${PRIMARY_ACCOUNT_PATH:/esb}
+    timeout-ms: ${RESPONSE_TIMEOUT_MS:10000}
+  external-primary-account:
+    scheme: https
+    host: ${EXTERNAL_PRIMARY_ACCOUNT_HOST:wassvcu.westfieldgrp.corp}
+    port: ${EXTERNAL_PRIMARY_ACCOUNT_PORT:443}
+    billing-service-path: /Billing/BillingService
+    timeout-ms: ${RESPONSE_TIMEOUT_MS:10000}
+  saml:
+    scheme: https
+    host: ${PING_FED_HOST:idpa1-test.westfieldgrp.corp}
+    port: ${PING_FED_PORT:9543}
+    sts-path: ${PING_STS_PATH:/idp/sts.wst}
+    wsa-address: ${SAML_WSA_ADDRESS:urn:sts:mulesoft:unt:to:saml:nonprod}
+    username: ${BILLING_SAML_USERNAME:}
+    password: ${BILLING_SAML_PASSWORD:}
+    timeout-ms: ${SAML_TIMEOUT_MS:10000}
+  tls:
+    truststore-path: ${TRUSTSTORE_PATH:}
+    truststore-password: ${TRUSTSTORE_PASSWORD:}
+  build:
+    other-info: ${BUILD_OTHER_INFO:--}
+    git-commit-hash: ${GIT_COMMIT_HASH:--}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+    instances:
+      billingService:
+        baseConfig: default
+      externalBillingService:
+        baseConfig: default
+      samlToken:
+        baseConfig: default
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 500ms
+        retryExceptions:
+          - com.westfiled.api.billing.soap.exceptions.DownStreamServiceException
+    instances:
+      billingService:
+        baseConfig: default
+      externalBillingService:
+        baseConfig: default
+      samlToken:
+        maxAttempts: 2
+        waitDuration: 500ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  otlp:
+    metrics:
+      export:
+        url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/metrics}
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  tracing:
+    sampling:
+      probability: 1.0
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    root: INFO
+    com.westfield.api: ${APP_LOG_LEVEL:INFO}

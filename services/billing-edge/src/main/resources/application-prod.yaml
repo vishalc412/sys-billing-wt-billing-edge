@@ -1,0 +1,62 @@
+# prod. API Manager instance 15710690 (km:node/N-0004 ec 1).
+billing:
+  api:
+    id: "15710690"
+    base-path: ${BILLING_BASE_PATH:/}
+  # 1991 in production, 1988 everywhere else. Verbatim (N-0101 ec 4); referenced by nothing, kept
+  # rather than dropped pending R-022.
+  pasm-id-billing: "1991"
+  console:
+    # ADR-0038 CORRECTION. The legacy serves the documentation console unconditionally in production
+    # on a hardcoded /console/*, unaudited — publishing the contract of a customer-billing API to
+    # anyone who can reach the listener (N-0031 defect). Disabled here, and the response is the same
+    # 404 an unknown console path gets, so a probe cannot confirm the console exists elsewhere.
+    enabled: false
+    path: /console
+  saml:
+    cache-ttl-seconds: 0
+    audience: ${BILLING_SAML_AUDIENCE}
+  backend:
+    esb:
+      host: ${BILLING_ESB_HOST}
+      connect-timeout: 10s
+      response-timeout: 30s
+    was:
+      host: ${BILLING_WAS_HOST}
+      connect-timeout: 10s
+      # response.timeout=20000 in production only (N-0003 ec 3). Verbatim.
+      response-timeout: 20s
+    sts:
+      host: ${BILLING_STS_HOST}
+      connect-timeout: 5s
+      response-timeout: 10s
+    vault:
+      host: ${BILLING_VAULT_HOST}
+      connect-timeout: 5s
+      response-timeout: 10s
+  truststore:
+    location: ${BILLING_TRUSTSTORE_LOCATION}
+    # ADR-0039: generated per environment. The legacy shipped ONE ciphertext across all six
+    # environments including production, and the decryption key is in no repository (N-0102).
+    # Neither is carried forward.
+    password: ${BILLING_TRUSTSTORE_PASSWORD}
+    client-certificate: false
+
+# Carried forward as a recorded oddity, not as a live setting: prod.properties defines
+# ping.host=idpa1-test.westfieldgrp.com — a TEST hostname in the production file — referenced by
+# nothing (N-0101 ec 3). It is not wired to billing.backend.sts.host, which is the property the STS
+# call actually reads. Recorded here so it is not silently dropped (CFG-001-h, R-022).
+legacy-unreferenced:
+  ping-host: idpa1-test.westfieldgrp.com
+
+logging:
+  level:
+    # ADR-0015: payload logging is DEBUG-only and DEBUG is off in production by decision.
+    com.westfield.api.billing.payload: WARN
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${BILLING_JWT_ISSUER_URI}

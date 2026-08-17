@@ -1,0 +1,49 @@
+
+# MuleShift S3 scaffold. Values here are the ADR-mandated defaults; CFG-001 and CFG-002 complete
+# this file and the per-environment profiles (ADR-0018). Do not add a default profile: ADR-0018
+# removes the legacy silent fallback to dev.
+spring:
+  application:
+    name: sys-billing
+  profiles:
+    default: none-configured    # startup validation (CFG-001) rejects this value
+
+server:
+  port: 8081
+
+billing:
+  security:
+    # ADR-0037. enforce | log-only. log-only carries a KNOWN cross-agency customer-PII exposure and
+    # requires a named human owner recorded in the ADR. Default is enforce, in every environment.
+    agency-entitlement: enforce
+    agency-entitlement-exempt-clients: []   # each entry needs an owner and an expiry (startup check)
+  saml:
+    # ADR-0007. 0 = mint per request, which is the cutover default under either legacy behaviour.
+    cache-ttl-seconds: 0
+  credentials:
+    # ADR-0008. Bounds vault call rate while preserving rotation-without-redeploy.
+    cache-ttl-seconds: 60
+  console:
+    # ADR-0038. Overridden to false in the prod profile.
+    enabled: true
+    path: /console
+  backend:
+    esb:
+      # ADR-0014. The legacy configures NO timeout here; 30s is the effective connector default
+      # stated as a number. Tightening to 10s waits on measurement (R-008).
+      connect-timeout: 10s
+      response-timeout: 30s
+    was:
+      connect-timeout: 10s
+      response-timeout: 10s        # 20s in the prod profile, as today
+    sts:
+      connect-timeout: 5s
+      response-timeout: 10s        # previously unbounded (ADR-0007, ADR-0014)
+    vault:
+      connect-timeout: 5s
+      response-timeout: 10s
+
+logging:
+  level:
+    # ADR-0015. Payload logging at DEBUG only, and DEBUG is off in production by decision.
+    com.westfield.api.billing.payload: INFO

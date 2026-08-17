@@ -1,0 +1,70 @@
+#%RAML 1.0 DataType
+
+description: JSON representation of a primaryAccount object returned from BillingService
+type: object
+properties:
+  accountBalance:
+    type: number
+    format: float
+  accountNumber:
+    type: string
+    minLength: 10
+    maxLength: 10
+  billTocontact:
+    type: object
+    properties:
+      name:
+        type: string
+      address:
+        type: object
+        properties: 
+          "street":
+            type: string
+          "city":
+            type: string
+          "state":
+            type: string
+          "zip":
+            type: string
+  billingSystemCode:
+    type: string
+  billType:
+    type: string
+    minLength: 1
+    maxLength: 5
+  dueAmount:
+    type: number
+    format: float
+  dueDate:
+    type: string
+    description: format yyyy-mm-dd
+  dateBilled:
+    type: string
+    description: format yyyy-mm-dd
+  lastPaymentAmount:
+    type: number
+    format: float
+  lastPaymentDate:
+    type: string
+    description: format yyyy-mm-dd
+  eft:
+    type: boolean
+    description: values true|false
+  pastDueAmount:
+    type: number
+    format: float
+  pastDueDate:
+    type: string
+    description: format yyyy-mm-dd
+  policies:
+    type: array
+    items:
+      type: object
+      properties:
+        policyNumber:
+          type: string
+        hasEscrow:
+          type: boolean
+        billingStatus:
+          type: string
+       

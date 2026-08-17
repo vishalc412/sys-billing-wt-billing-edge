@@ -1,0 +1,61 @@
+{
+  "root": "C:\\Users\\kavita.batra\\Downloads\\Westfiled\\Agentic\\sys-billing\\archive\\sapi-billing",
+  "stack": [
+    "Java (Maven) \u2014 pom.xml",
+    "  version==1.0",
+    "  modelVersion==4.0.0",
+    "  version==1.0.0",
+    "  app.runtime==4.4.0-20250116",
+    "  mule.maven.plugin.version==3.5.4",
+    "  munit.version==2.1.4",
+    "  version==9.1.1.0",
+    "  version==2.3.4",
+    "  version==1.2.3",
+    "  version==2.0.2",
+    "  version==1.0.12",
+    "  version==1.7.3",
+    "  version==1.2.2",
+    "  version==1.5.6",
+    "  version==2.0.23",
+    "  version==1.6.0",
+    "  version==2.3.9"
+  ],
+  "layout": [
+    "src/main/  (60 files)",
+    "src/test/  (33 files)",
+    "(root)/  (7 files)",
+    "reports/assets/  (2 files)",
+    ".mule/  (1 files)",
+    ".settings/  (1 files)",
+    "reports/  (1 files)"
+  ],
+  "entrypoint": [],
+  "data": [],
+  "integration": [],
+  "config": [],
+  "guardrail": [
+    "src\\main\\resources\\dev.properties:10  10000",
+    "src\\main\\resources\\local.properties:10  10000",
+    "src\\main\\resources\\perf.properties:9  10000",
+    "src\\main\\resources\\prod.properties:20  20000",
+    "src\\main\\resources\\stage.properties:9  10000"
+  ],
+  "tests": [],
+  "infra": [
+    ".tfignore"
+  ],
+  "docs": [],
+  "crib": null,
+  "counts": {
+    "entrypoint": 0,
+    "data": 0,
+    "integration": 0,
+    "config": 0,
+    "guardrail": 5,
+    "tests": 0,
+    "infra": 1,
+    "docs": 0,
+    "stack": 18
+  },
+  "unscanned_note": null
+}

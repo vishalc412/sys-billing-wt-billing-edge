@@ -1,0 +1,40 @@
+# test. API Manager instance 15653875 (km:node/N-0004 ec 1).
+billing:
+  api:
+    id: "15653875"
+    base-path: ${BILLING_BASE_PATH:/}
+  pasm-id-billing: "1988"
+  console:
+    enabled: true
+    path: /console
+  saml:
+    cache-ttl-seconds: 0
+    audience: ${BILLING_SAML_AUDIENCE}
+  backend:
+    esb:
+      host: ${BILLING_ESB_HOST}
+      connect-timeout: 10s
+      response-timeout: 30s
+    was:
+      host: ${BILLING_WAS_HOST}
+      connect-timeout: 10s
+      response-timeout: 10s
+    sts:
+      host: ${BILLING_STS_HOST}
+      connect-timeout: 5s
+      response-timeout: 10s
+    vault:
+      host: ${BILLING_VAULT_HOST}
+      connect-timeout: 5s
+      response-timeout: 10s
+  truststore:
+    location: ${BILLING_TRUSTSTORE_LOCATION}
+    password: ${BILLING_TRUSTSTORE_PASSWORD}
+    client-certificate: false
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${BILLING_JWT_ISSUER_URI}

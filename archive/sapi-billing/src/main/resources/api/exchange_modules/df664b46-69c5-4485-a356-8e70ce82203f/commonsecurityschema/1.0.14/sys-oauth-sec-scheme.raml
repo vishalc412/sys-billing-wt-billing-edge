@@ -1,0 +1,17 @@
+#%RAML 1.0 SecurityScheme
+type: OAuth 2.0
+description: |
+  This API supports OAuth 2.0 for authenticating all API requests.
+describedBy: 
+  headers: 
+    Authorization:
+      description: |
+          Used to send a valid OAuth 2 access token.
+      type: string
+      example: Bearer <access_token>
+settings:
+  authorizationUri: https://idpa1-test.westfieldgrp.com/as/authorization.oauth2
+  accessTokenUri: https://idpa1-test.westfieldgrp.com/as/token.oauth2
+  authorizationGrants: [ authorization_code, password, client_credentials ]
+  scopes: [r_tos, rw_tos, adm_tos, r_claims, rw_claims, adm_claims, r_email, rw_email, adm_email, r_pingid, rw_pingid, adm_pingid, r_phone, rw_phone, adm_phone, r_ping, rw_ping, adm_ping, r_user_profile, rw_user_profile, adm_user_profile, r_policy, rw_policy, adm_policy, r_billing, rw_billing, adm_billing, r_smartcomm, rw_smartcomm, adm_smartcomm, r_faq, rw_faq, adm_faq
+]

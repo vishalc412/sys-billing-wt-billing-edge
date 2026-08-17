@@ -1,0 +1,13 @@
+# Maps archive/sapi-billing/src/main/resources/dev.properties
+app:
+  primary-account:
+    host: dev5esb.westfieldgrp.corp
+    path: /esb
+    timeout-ms: 10000
+  external-primary-account:
+    host: wassvcu.westfieldgrp.corp
+    timeout-ms: 10000
+  saml:
+    host: idpa1-test.westfieldgrp.corp
+    port: 9543
+    wsa-address: "urn:sts:mulesoft:unt:to:saml:nonprod"

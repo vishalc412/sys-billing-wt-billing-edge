@@ -1,0 +1,56 @@
+{
+    "RetrieveAccountDetailsResponse": {
+        "responseHeader": {
+            "id": "20190308081937630020366SABCM001",
+            "cmdType": "response",
+            "cmdStatus": "ok"
+        },
+        "accountAgreements": {
+            "typeName": "insuredAccountAgreement",
+            "externalReference": "2161000027",
+            "paymentStatus": "Current",
+            "currentAmountDue": {
+                "theCurrencyAmount": "   1087.25",
+                "theCurrencyCode": "usd"
+            },
+            "currentAmountDueDate": "2019-03-20",
+            "currentInvoiceSentDate": "2019-03-01",
+            "lastPaymentApplied": {
+                "theCurrencyAmount": "   1087.25",
+                "theCurrencyCode": "usd"
+            },
+            "lastPaymentAppliedDate": "2018-12-21",
+            "numberOfCancellationNotices": " 0",
+            "totalCreditsApplied": {
+                "theCurrencyAmount": "      0.00",
+                "theCurrencyCode": "usd"
+            },
+            "totalPayments": {
+                "theCurrencyAmount": "   1087.25",
+                "theCurrencyCode": "usd"
+            },
+            "rolePlayerInvolvedInAccountAgreement": {
+                "moneyScheduler": {
+                    "frequency": "Quarterly"
+                }
+            },
+            "policyNumber": "5088401",
+            "policySymbol": "APV",
+            "policyVersion": "07",
+            "totalPremium": {
+                "theCurrencyAmount": "   4349.00",
+                "theCurrencyCode": "usd"
+            }
+        },
+        "contactPoints": {
+            "objectReference": {
+                "componentId": "Westfield.Party.PartyObjectManager",
+                "objectId": "2161000027billedContact"
+            },
+            "addressLines": "PO BOX 434",
+            "city": "DAVISON",
+            "state": "MI",
+            "zipCode": "48423-0434"
+        }
+    }
+}

@@ -1,0 +1,437 @@
+openapi: 3.0.3
+info:
+  title: sys-billing — billing-account
+  version: "1.0.0"
+  description: |
+    The ESB-backed `/primaryAccount` family: account summary, transaction history and policy escrow
+    transaction history (CAP-005, CAP-006, CAP-007 over the shared enquiry CAP-008).
+
+    **FROZEN at S3 (scaffold-v1). Read-only at S4.** A mismatch between this document and an
+    implementation is a contract defect routed to the migration-architect (S6). No engineer edits
+    this file.
+
+    This contract documents **implemented legacy behaviour**, not the legacy RAML, per ADR-0012.
+    Where the two disagree, the disagreement is marked `x-legacy-defect` with the ADR that decided
+    it. Field names not directly evidenced in the knowledge map are marked `x-name-source: inferred`
+    and must be confirmed against the captured baseline (PAR-001); a mismatch found at S5 is a
+    contract defect, not an implementation defect.
+  x-migrated-from:
+    - mule:flow/primaryAccount-implementation
+    - mule:flow/transactions-implementation
+    - mule:flow/escrowTransactions-implementation
+    - mule:subflow/callBillingService-primaryAccount
+  x-adrs: [ADR-0004, ADR-0005, ADR-0006, ADR-0010, ADR-0011, ADR-0012, ADR-0020, ADR-0023,
+           ADR-0024, ADR-0025, ADR-0026, ADR-0027, ADR-0028, ADR-0029, ADR-0030, ADR-0032, ADR-0033]
+
+servers:
+  - url: /
+    description: |
+      The externally visible base path is supplied by infrastructure outside the source repository
+      and is UNKNOWN (U12, R-002). Paths here are relative to whatever the ingress publishes.
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: primaryAccount
+    description: Read-only billing account enquiries served from the Westfield ESB.
+
+paths:
+  /primaryAccount:
+    get:
+      operationId: getPrimaryAccount
+      tags: [primaryAccount]
+      summary: Billing account position (the account summary)
+      description: |
+        Presents a billing account as a single summary. km:node/N-0045, N-0085, N-0077, N-0078.
+
+        Money is normalised to exactly two decimals, HALF_UP, and an unsupplied figure is `null`
+        rather than zero (ADR-0004). The mapping variant is chosen by the `6000` prefix of the
+        REQUEST parameter, not by `billingSystemCode` (ADR-0028).
+      parameters:
+        - $ref: '#/components/parameters/BillingAccountNumber'
+        - $ref: '#/components/parameters/PolicyNumberOptional'
+        - $ref: '#/components/parameters/PolicyVersionOptional'
+        - $ref: '#/components/parameters/InteractionCorrelationId'
+      responses:
+        '200':
+          description: The account summary.
+          headers:
+            x-correlation-id: { $ref: '#/components/headers/CorrelationId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PrimaryAccountSummary' }
+        '204':
+          description: |
+            The billing system returned no account. The request was understood and there is nothing
+            to return (km:node/N-0085). **No body** — ADR-0020; the legacy leaves the raw SOAP
+            payload in place and whether the listener suppressed it could not be determined (R-009).
+          headers:
+            x-correlation-id: { $ref: '#/components/headers/CorrelationId' }
+        '400': { $ref: '#/components/responses/ContractViolation' }
+        '401': { $ref: '#/components/responses/Unauthorised' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/RelayedNotFound' }
+        '500': { $ref: '#/components/responses/AbsorbedFailure' }
+        '502': { $ref: '#/components/responses/UpstreamIdentityFailure' }
+
+  /primaryAccount/transactions:
+    get:
+      operationId: getPrimaryAccountTransactions
+      tags: [primaryAccount]
+      summary: Account transaction history
+      description: |
+        Publishes exactly four of the many fields the billing system returns (km:node/N-0088,
+        N-0094). The caller always receives a list.
+
+        **Silent-failure path preserved:** a backend fault classified as account-not-found is
+        answered with **200 and an empty array**, logged at ERROR under `SB-PAT-C`
+        (ADR-0032). A consumer cannot distinguish "no transactions" from "the billing system
+        rejected the request". Instrumented via `mule.parity.swallowed_error`.
+      parameters:
+        - $ref: '#/components/parameters/BillingAccountNumber'
+        - $ref: '#/components/parameters/PolicyNumberOptional'
+        - $ref: '#/components/parameters/PolicyVersionOptional'
+        - $ref: '#/components/parameters/InteractionCorrelationId'
+      responses:
+        '200':
+          description: |
+            The transaction list. Empty for an account with no transactions, for a response with no
+            account at all, and for a backend account-not-found fault — three conditions, one
+            response (ADR-0032).
+          headers:
+            x-correlation-id: { $ref: '#/components/headers/CorrelationId' }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Transaction' }
+          x-legacy-defect: ADR-0032
+        '400': { $ref: '#/components/responses/ContractViolation' }
+        '401': { $ref: '#/components/responses/Unauthorised' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/RelayedNotFound' }
+        '500': { $ref: '#/components/responses/AbsorbedFailure' }
+        '502': { $ref: '#/components/responses/UpstreamIdentityFailure' }
+
+  /primaryAccount/policy/escrow/transactions:
+    get:
+      operationId: getPolicyEscrowTransactions
+      tags: [primaryAccount]
+      summary: Policy escrow transaction history
+      description: |
+        Escrow transaction history for one policy term on a billing account (km:node/N-0095,
+        N-0100).
+
+        **Corrected at cutover (ADR-0024):** the term is selected by the caller's `policyNumber`,
+        narrowed by `policyVersion` when supplied. The legacy ignored both parameters and selected
+        by response shape, which on a multi-policy account could return another policy's escrow
+        ledger. This is a deliberate divergence, classified as a confidentiality defect.
+
+        Three legacy oddities are **preserved**: `policyNumber` carries the billing ACCOUNT number
+        (ADR-0023), `amountDue` is a pass-through string (ADR-0025), and the no-account path returns
+        a bare `[]` rather than the object shape (ADR-0026).
+      parameters:
+        - $ref: '#/components/parameters/BillingAccountNumber'
+        - $ref: '#/components/parameters/PolicyNumberRequired'
+        - $ref: '#/components/parameters/PolicyVersionOptional'
+        - $ref: '#/components/parameters/InteractionCorrelationId'
+      responses:
+        '200':
+          description: |
+            Two incompatible shapes on one status, preserved from the legacy (ADR-0026): the object
+            when an account was returned, a bare `[]` when it was not.
+          headers:
+            x-correlation-id: { $ref: '#/components/headers/CorrelationId' }
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/EscrowTransactionsResponse'
+                  - $ref: '#/components/schemas/EmptyArray'
+          x-legacy-defect: ADR-0026
+        '204':
+          description: |
+            Backend fault classified as account-not-found, reached through the shared exception
+            handling (km:node/N-0084). The same business outcome as the `200 []` above; the caller
+            cannot influence which they get (ADR-0027). **No body** (ADR-0020, ADR-0031).
+          x-legacy-defect: ADR-0027
+        '400': { $ref: '#/components/responses/ContractViolation' }
+        '401': { $ref: '#/components/responses/Unauthorised' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/RelayedNotFound' }
+        '500': { $ref: '#/components/responses/AbsorbedFailure' }
+        '502': { $ref: '#/components/responses/UpstreamIdentityFailure' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Validated by the service itself (ADR-0013). The legacy delegated entirely to API Manager,
+        whose policy set was never exported (R-003).
+
+  headers:
+    CorrelationId:
+      description: Echoed on every response by the main listener (km:node/N-0023).
+      schema: { type: string }
+    FailureOrigin:
+      description: |
+        Which system actually failed (ADR-0033). Additive; no legacy response carries it. The
+        back end's HTTP status is still relayed verbatim, so this header is the only reliable way to
+        tell a caller-credential failure from our service-account failure.
+      schema:
+        type: string
+        enum: [upstream-esb, upstream-was, upstream-sts, upstream-vault, gateway, this-service]
+
+  parameters:
+    BillingAccountNumber:
+      name: billingAccountNumber
+      in: query
+      required: true
+      description: 10-character billing account number. Length is validated before any business logic.
+      schema: { type: string, minLength: 10, maxLength: 10 }
+    PolicyNumberRequired:
+      name: policyNumber
+      in: query
+      required: true
+      description: |
+        7-character policy number. Required and validated. Under ADR-0024 it now selects the policy
+        term; the legacy validated it, captured it and discarded it.
+      schema: { type: string, minLength: 7, maxLength: 7 }
+    PolicyNumberOptional:
+      name: policyNumber
+      in: query
+      required: false
+      description: Narrows the ESB enquiry. Absence means "no narrowing"; sent to the ESB as an empty element (ADR-0006).
+      schema: { type: string, minLength: 7, maxLength: 7 }
+    PolicyVersionOptional:
+      name: policyVersion
+      in: query
+      required: false
+      schema: { type: string }
+    InteractionCorrelationId:
+      name: x-interaction-correlation-id
+      in: header
+      required: false
+      description: Caller-supplied identifier joining several API calls into one business interaction (CAP-003).
+      schema: { type: string }
+
+  responses:
+    ContractViolation:
+      description: |
+        Request rejected before any business logic. Body is a single field with a fixed string and no
+        diagnostic detail, exactly as the legacy APIkit handlers emit (ADR-0042).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/MessageOnlyError' }
+          example: { message: "Bad request" }
+    Unauthorised:
+      description: |
+        No token, or a token the service rejected (ADR-0013). **The body shape is a divergence**: the
+        legacy response came from API Manager and nobody has seen it (R-003).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+      x-unknown: R-003
+    Forbidden:
+      description: Relayed from the back end, or produced by the entitlement check (ADR-0037).
+      headers:
+        X-Billing-Failure-Origin: { $ref: '#/components/headers/FailureOrigin' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/AbsorbedFailureBody' }
+    RelayedNotFound:
+      description: |
+        **The back end's 404, relayed verbatim** (ADR-0033). The API resource exists; the upstream
+        system returned 404. Check `X-Billing-Failure-Origin`.
+      headers:
+        X-Billing-Failure-Origin: { $ref: '#/components/headers/FailureOrigin' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/AbsorbedFailureBody' }
+      x-legacy-defect: ADR-0033
+    AbsorbedFailure:
+      description: |
+        The `error_Flow` body (km:node/N-0069). `errorCause` is the raw exception cause and is NOT
+        redacted — ADR-0015 masks the logs but deliberately leaves the response byte-identical.
+      headers:
+        X-Billing-Failure-Origin: { $ref: '#/components/headers/FailureOrigin' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/AbsorbedFailureBody' }
+    UpstreamIdentityFailure:
+      description: |
+        The service could not obtain a SAML assertion for its own service account (ADR-0007).
+        **Divergence:** the legacy sent the backend call anyway, unauthenticated, and the caller saw
+        the back end's 401.
+      headers:
+        X-Billing-Failure-Origin: { $ref: '#/components/headers/FailureOrigin' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/AbsorbedFailureBody' }
+
+  schemas:
+    PrimaryAccountSummary:
+      type: object
+      x-migrated-from: km:node/N-0077, N-0078
+      x-name-source: inferred
+      description: |
+        Field names are inferred from the knowledge map's prose and must be confirmed against the
+        captured baseline (PAR-001). A name mismatch found at S5 is a CONTRACT defect.
+      properties:
+        accountNumber: { type: string }
+        billingSystemCode:
+          type: string
+          description: Present in the response but NOT used to choose the mapping variant (ADR-0028).
+        billType: { type: string }
+        accountBalance: { $ref: '#/components/schemas/MoneyNumber' }
+        dueAmount: { $ref: '#/components/schemas/MoneyNumber' }
+        dueDate: { $ref: '#/components/schemas/PassThroughDate' }
+        dateBilled: { $ref: '#/components/schemas/PassThroughDate' }
+        lastPaymentAmount: { $ref: '#/components/schemas/MoneyNumber' }
+        lastPaymentDate: { $ref: '#/components/schemas/PassThroughDate' }
+        pastDueAmount: { $ref: '#/components/schemas/MoneyNumber' }
+        pastDueDate: { $ref: '#/components/schemas/PassThroughDate' }
+        eft:
+          type: string
+          description: |
+            **Declared boolean in the legacy RAML, emitted as a pass-through STRING** (`"false"`).
+            In a truthiness check the string `"false"` is truthy, so a non-EFT account reads as EFT.
+            Preserved (ADR-0029); the strongest single candidate for early correction in a v2.
+          example: "false"
+          x-legacy-defect: ADR-0029
+        billTocontact: { $ref: '#/components/schemas/BillToContact' }
+        policies:
+          type: array
+          nullable: true
+          description: |
+            **Nullable, not empty-array.** When the backend response carries no `policies` element the
+            legacy emits `null` rather than `[]` (km:node/N-0077 ec, ADR-0005). A single policy is
+            still a one-element array.
+          items: { $ref: '#/components/schemas/PolicySummary' }
+          x-legacy-defect: ADR-0005
+    PolicySummary:
+      type: object
+      properties:
+        policyNumber: { type: string }
+        hasEscrow:
+          type: boolean
+          description: Derived from the PRESENCE of an escrowAccount element, not from a flag. An empty element still yields true.
+        billingStatus:
+          description: |
+            **Type depends on the data.** DuckCreek accounts report the most recent term's status as
+            a string; a BCMS account with several terms yields an ARRAY of statuses, violating the
+            published type. Preserved and measured (ADR-0030, counter `mule.parity.bcms_multi_term`).
+          oneOf:
+            - type: string
+            - type: array
+              items: { type: string }
+          x-legacy-defect: ADR-0030
+    BillToContact:
+      type: object
+      description: The bill-to contact with a flattened postal address (km:node/N-0077).
+      x-name-source: inferred
+      properties:
+        name: { type: string }
+        address:
+          type: object
+          properties:
+            street: { type: string }
+            city: { type: string }
+            state: { type: string }
+            zip: { type: string }
+    Transaction:
+      type: object
+      x-migrated-from: km:node/N-0094
+      description: Exactly four of the many fields the billing system returns (km:node/N-0094).
+      properties:
+        amountDue: { $ref: '#/components/schemas/MoneyNumber' }
+        description: { type: string }
+        dueDate: { $ref: '#/components/schemas/PassThroughDate' }
+        processingDate: { $ref: '#/components/schemas/PassThroughDate' }
+    EscrowTransactionsResponse:
+      type: object
+      x-migrated-from: km:node/N-0100
+      properties:
+        policyNumber:
+          type: string
+          description: |
+            **Carries the 10-digit billing ACCOUNT number, not the policy number** the caller sent.
+            Preserved (ADR-0023). Correcting the label before correcting the term selection would
+            produce a confidently wrong answer; the selection is corrected by ADR-0024, the label is
+            not.
+          example: "3476501380"
+          x-legacy-defect: ADR-0023
+        policyVersion:
+          type: string
+          nullable: true
+          description: Version of the selected term; null when no term carries more than a version number.
+        escrowTransactions:
+          type: array
+          description: |
+            Passed through UNCHANGED from the back end — every backend field appears, and amounts are
+            NOT normalised (ADR-0025). Empty for a policy term with no escrow account, which is a
+            valid answer rather than an error.
+          items:
+            type: object
+            additionalProperties: true
+            properties:
+              amountDue:
+                type: string
+                description: A STRING here while the sibling transactions endpoint emits a number (ADR-0025).
+                example: "958.00"
+                x-legacy-defect: ADR-0025
+    EmptyArray:
+      type: array
+      maxItems: 0
+      items: { type: object }
+      description: The bare `[]` the escrow endpoint returns when the billing system returned no account (ADR-0026).
+    MoneyNumber:
+      type: number
+      nullable: true
+      description: |
+        Exactly two decimals including trailing zeros, HALF_UP (ADR-0004). `null` means the billing
+        system did not supply a figure — distinct from zero, which means nothing is owed. HALF_UP is
+        inherited runtime behaviour, not a stated business rule (R-018).
+      example: 2480.81
+    PassThroughDate:
+      type: string
+      nullable: true
+      description: Passed through as a raw string with no parsing or validation. Documented as yyyy-mm-dd; nothing enforces it.
+    MessageOnlyError:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+    AbsorbedFailureBody:
+      type: object
+      x-migrated-from: km:node/N-0069
+      description: |
+        The `error_Flow` shape. It does NOT match the legacy RAML's `commonError` type, and that
+        disagreement is preserved rather than reconciled (ADR-0042).
+      properties:
+        faultActor: { type: string }
+        errorDesc: { type: string }
+        errorType:
+          type: object
+          additionalProperties: true
+          description: A structured namespace/identifier object, not a flat code.
+        errorCause:
+          type: string
+          nullable: true
+          description: |
+            The raw exception cause. May contain internal hostnames and payload fragments. NOT
+            redacted, deliberately (ADR-0015 rejected changing the response body at cutover).
+        correlationId: { type: string }
+    ProblemDetail:
+      type: object
+      description: RFC 9457. Used only for responses the legacy never produced (ADR-0042).
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string, format: uri }

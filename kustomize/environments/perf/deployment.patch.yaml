@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sys-billing
+spec:
+  template:
+    spec:
+      containers:
+        - name: sys-billing
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: perf
+            - name: PRIMARY_ACCOUNT_HOST
+              value: perfesb.westfieldgrp.corp
+            - name: EXTERNAL_PRIMARY_ACCOUNT_HOST
+              value: wassvcr.westfieldgrp.corp
+            - name: PING_FED_HOST
+              value: idpa1-test.westfieldgrp.corp

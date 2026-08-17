@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="primaryAccount-implementation-test-suite.xml" />
+	<munit:test name="primaryAccountTransactions-implementation-test-suite-transactions" doc:id="d6f49b69-6917-4464-92ae-0820fe137e39" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock BillingService" doc:id="d579d862-9645-471e-a4aa-d5837ecb74ae" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="a3fa4438-8b6c-44ca-bb56-e50963e1324d" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output text/xml --- readUrl('classpath://primaryAccountimplementation200\mock_payload.dwl')]" mediaType="text/xml" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="samlResponse" value="#[output text/xml --- readUrl('classpath://primaryAccountimplementation200\mock_var_billingSAMLToken.dwl')]" mediaType="text/xml" encoding="UTF-8" />
+						<munit-tools:variable key="billingAccountNumber" value="#[output application/java --- readUrl('classpath://primaryAccountimplementation200\mock_var_billingAccountNumber.dwl')]" mediaType="application/json" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="dd049841-f79c-466d-87ee-9debe545bc3d" >
+				<munit:attributes value="#[readUrl('classpath://primaryAccountimplementation200\attributeConfig.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to transactions-implementation" doc:id="1518d06c-7b5a-4954-89aa-36460447d510" name="transactions-implementation"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="05d7016b-830b-4468-b663-7c0914c7273e" message="The payload does not match" >
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import primaryAccountimplementation200::transaction_response
+---
+transaction_response::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="escrowTransaction-implementation-200OK" doc:id="185f38d0-7749-4af2-be8f-f4619ad4a075" description="Test" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock BillingService" doc:id="75b3b4b7-95dc-4703-b994-82b3f45ebc73" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="a3fa4438-8b6c-44ca-bb56-e50963e1324d" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output text/xml --- readUrl('classpath://primaryAccountimplementation200\escrowTransaction_mock_payload.dwl')]" mediaType="application/xml" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="samlResponse" value="#[output text/xml --- readUrl('classpath://primaryAccountimplementation200\mock_var_billingSAMLToken.dwl')]" mediaType="text/xml" encoding="UTF-8" />
+						<munit-tools:variable key="billingAccountNumber" value="#[output application/java --- readUrl('classpath://primaryAccountimplementation200\mock_var_billingAccountNumber.dwl')]" mediaType="application/json" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="35efdd39-b0fa-4620-807d-3f5c912522dc" >
+				<munit:attributes value='#[output application/java&#10;---&#10;{&#10;	"queryParams":{&#10;		"billingAccountNumber":"3476501380",&#10;		"policyNumber":"543791G"&#10;	}&#10;}]' />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to primaryAccount-implementation" doc:id="a12d393e-f902-40cb-8d7d-443319d2cec9" name="escrowTransactions-implementation" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert payload equals" doc:id="89022465-45bf-403b-8bd3-33b926e96e4d" actual="#[payload]" expected='#[{
+  "policyNumber": "3476501380",
+  "policyVersion": "0",
+  "escrowTransactions": [
+    {
+      "amountDue": "958.00",
+      "description": "Invoice",
+      "dueDate": "2025-04-03",
+      "processingDate": "2025-03-13"
+    },
+    {
+      "amountDue": "958.00",
+      "description": "New Business",
+      "dueDate": "2025-03-03",
+      "processingDate": "2025-03-04"
+    }
+  ]
+}]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="escrowTransaction-implementation-200OK-emptyTransaction" doc:id="a86a4637-07a9-42b1-8bb3-f5dcf43a2a2e" description="Test" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock BillingService" doc:id="b48e1765-bcd5-4c02-be0f-f39771e63109" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="a3fa4438-8b6c-44ca-bb56-e50963e1324d" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output text/xml --- readUrl('classpath://primaryAccountimplementation200\escrowEmptyTransaction_mock_payload.dwl')]" mediaType="application/xml" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="samlResponse" value="#[output text/xml --- readUrl('classpath://primaryAccountimplementation200\mock_var_billingSAMLToken.dwl')]" mediaType="text/xml" encoding="UTF-8" />
+						<munit-tools:variable key="billingAccountNumber" value="#[output application/java --- readUrl('classpath://primaryAccountimplementation200\mock_var_billingAccountNumber.dwl')]" mediaType="application/json" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="77643c33-bfbe-4233-85dd-6db17d1e9e2b" >
+				<munit:attributes value='#[output application/java&#10;---&#10;{&#10;	"queryParams":{&#10;		"billingAccountNumber":"3476501380",&#10;		"policyNumber":"543793R"&#10;	}&#10;}]' />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to primaryAccount-implementation" doc:id="75dab992-823b-463d-9f93-93dd5690a5e1" name="escrowTransactions-implementation" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert payload equals" doc:id="8272afa6-60a4-4e1e-bbe4-73ec63a5699c" actual="#[payload]" expected='#[{
+  "policyNumber": "3476501380",
+  "policyVersion": "0",
+  "escrowTransactions": [
+    
+  ]
+}]' />
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

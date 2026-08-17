@@ -1,0 +1,14 @@
+[
+  {
+    "amountDue": 522.00,
+    "description": "Payment Received",
+    "dueDate": "2023-05-18",
+    "processingDate": "2023-05-18"
+  },
+  {
+    "amountDue": 522.00,
+    "description": "Invoice",
+    "dueDate": "2023-05-19",
+    "processingDate": "2023-04-28"
+  }
+]

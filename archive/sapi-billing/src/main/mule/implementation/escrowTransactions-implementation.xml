@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="escrowTransactions-implementation" doc:id="0c0aeaf6-eab9-43dd-a6c0-46ed7e5234a8" >
+		<flow-ref doc:name="callBillingService-primaryAccount" doc:id="048f2c7c-3ad5-49d9-932f-4ab814fd7d14" name="callBillingService-primaryAccount" />
+		<choice doc:name="Choice" doc:id="ca7064d8-fb79-436b-afb2-ceefa531510d" >
+			<when expression="#[payload.Envelope.Body.PrimaryAccountResponse?]" >
+				<flow-ref doc:name="mapResponse_escrowTransactions" doc:id="dc26d91c-3bf1-4daf-9d02-6560604f806e" name="mapResponse_escrowTransactions" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Set httpStatus and Payload" doc:id="536d2e2a-9b72-415a-9f3c-168072a7c52e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[]]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[200]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="06a9153f-840a-4e77-b1fe-6460818da0e5" >
+				<flow-ref doc:name="call primaryAccount-exceptionHandling" doc:id="909d46e2-79f4-4c34-9bc5-09fc11836121" name="primaryAccount-exceptionHandling" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<sub-flow name="mapResponse_escrowTransactions" doc:id="1584da81-33e3-45f6-92aa-28c362e13445" >
+		<set-variable value="#[%dw 2.0
+/*
+ * The XML returned from the BillingService is not well formed (multiple tags at the same level, etc).
+ * 
+ * This setVariable converts the xml to json and transforms the duplicate tags into an array.
+ * 
+ * reference: https://help.salesforce.com/s/articleView?id=001116941&amp;type=1
+ */
+output application/json duplicateKeyAsArray=true
+---
+payload.Envelope.Body.PrimaryAccountResponse]" doc:name="convertXMLToJSON" doc:id="9d59e1e1-fc40-4e9a-ab49-4fcf3d70efb8" variableName="billingResponsePayload" />
+		<ee:transform doc:name="set payload" doc:id="2ebfd191-85b4-4a39-9233-1bc69f526425" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var billingData = vars.billingResponsePayload.primaryAccount
+
+//if policyTerm is array we are checking for the object which has other fields as well apart from just version
+var policyVersion = if(billingData.policies.policyTerm is Object) billingData.policies.policyTerm.version else ((billingData.policies.policyTerm filter (item) -> sizeOf(keysOf(item)) > 1)[0].version)
+
+// if policyTerm is array we filter the array for the object with the same version value
+var transactions = 
+    if (billingData.policies.policyTerm is Object) 
+        billingData.policies.policyTerm.escrowAccount.transactions default [] 
+    else 
+        ((billingData.policies.policyTerm filter (item) -> item.version == policyVersion)[0].escrowAccount.transactions default [])
+
+---
+{
+    "policyNumber":billingData.accountNumber,
+    "policyVersion":policyVersion,
+    "escrowTransactions":transactions
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

@@ -1,0 +1,30 @@
+{
+  "accountBalance": 1234.56,
+  "accountNumber": "1234567890",
+  "billTocontact": {
+    "name": "SC2_40",
+    "address": {
+      "street": "N University St",
+      "city": "Normal",
+      "state": "IL",
+      "zip": "123456"
+    }
+  },
+  "billingSystemCode": "DuckCreek",
+  "billType": "PA",
+  "dueAmount": 100.00,
+  "dueDate": "2024-01-01",
+  "dateBilled": "2024-01-01",
+  "lastPaymentAmount": 100.00,
+  "lastPaymentDate": "2024-01-01",
+  "eft": true,
+  "pastDueAmount": 3214.00,
+  "pastDueDate": "2024-01-01",
+  "policies":[
+      {
+        "policyNumber":"111111P",
+        "hasEscrow":false,
+        "billingStatus":"ACTIVE"
+      }
+    ]
+}

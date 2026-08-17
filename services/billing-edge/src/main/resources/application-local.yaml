@@ -1,0 +1,49 @@
+# local — the developer workstation profile.
+#
+# CFG-001-e is a DELIBERATE DIVERGENCE (ADR-0018). The legacy local.properties omits
+# primaryAccount.host and primaryAccount.path entirely, so the three /primaryAccount endpoints cannot
+# start at all under mule.env=local (N-0003 ec 2, N-0101 ec 1). Every endpoint resolves its backend
+# configuration here. Nothing about that is observable to a consumer, and the alternative is a local
+# environment in which three of eight endpoints cannot be worked on.
+billing:
+  api:
+    # The legacy records no API Manager instance for local; autodiscovery is not registered there.
+    id: local-no-api-manager-instance
+    base-path: /sapi-billing/v1
+  pasm-id-billing: "1988"          # non-prod value, verbatim (N-0101 ec 4, referenced by nothing)
+  console:
+    enabled: true
+    path: /console
+  saml:
+    cache-ttl-seconds: 0
+    audience: https://local.westfieldgrp.com/billing
+  backend:
+    esb:
+      host: ${BILLING_ESB_HOST:http://localhost:8089/esb}
+      connect-timeout: 10s
+      response-timeout: 30s
+    was:
+      host: ${BILLING_WAS_HOST:http://localhost:8089/was}
+      connect-timeout: 10s
+      response-timeout: 10s        # response.timeout=10000 in every non-production environment
+    sts:
+      host: ${BILLING_STS_HOST:http://localhost:8089/sts}
+      connect-timeout: 5s
+      response-timeout: 10s
+    vault:
+      host: ${BILLING_VAULT_HOST:http://localhost:8089/vault}
+      connect-timeout: 5s
+      response-timeout: 10s
+  truststore:
+    location: ${BILLING_TRUSTSTORE_LOCATION:classpath:truststore/local.jks}
+    # ADR-0039: generated per environment. The legacy ciphertext, byte-identical across all six
+    # environments, is not carried forward in any form and neither is its key (N-0102).
+    password: ${BILLING_TRUSTSTORE_PASSWORD:local-development-only}
+    client-certificate: false
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${BILLING_JWT_ISSUER_URI:http://localhost:8089/idp}

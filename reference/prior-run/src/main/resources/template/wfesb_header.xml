@@ -1,0 +1,15 @@
+
+        <wfesb:Header>
+            <wfesb:HeaderVersion>1.0</wfesb:HeaderVersion>
+            <wfesb:RequestProvider>
+                <wfesb:ServiceName>Billing.primaryAccount</wfesb:ServiceName>
+                <wfesb:ServiceVersion>1.1</wfesb:ServiceVersion>
+            </wfesb:RequestProvider>
+            <wfesb:RequestFormat>
+                <wfesb:Dialect>Billing</wfesb:Dialect>
+                <wfesb:Version>1.0</wfesb:Version>
+            </wfesb:RequestFormat>
+            <wfesb:GlobalTransactionID>
+                <wfesb:ConsumerTransactionID>${CORRELATION_ID}</wfesb:ConsumerTransactionID>
+            </wfesb:GlobalTransactionID>
+        </wfesb:Header>

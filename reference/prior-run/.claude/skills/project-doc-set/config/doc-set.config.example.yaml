@@ -1,0 +1,79 @@
+# project-doc-set configuration
+#
+# Copy to the project as docs/doc-set.config.yaml and edit. Everything here is
+# a default that the interview can override for a single run — the point is to
+# stop re-answering the same questions on every document set.
+#
+# Anything left blank is treated as "ask me".
+
+organisation:
+  name: ""                      # appears on title pages
+  system_name: ""               # the system these documents describe
+  doc_owner: ""                 # default owner when a document has no named one
+  accent_colour: "1F3864"       # Word heading / table header colour, hex, no '#'
+                                # after changing: python scripts/make_reference_docx.py --accent <hex>
+
+output:
+  root: "docs"                  # relative to the project root
+  dist: "docs/dist"             # where .docx files are written
+  diagrams: "docs/diagrams"     # where .drawio files are written
+  commit_docx: false            # commit built .docx alongside the Markdown?
+  numbering: true               # prefix filenames with NN- in reading order
+
+publishing:
+  # Destinations used unless the interview says otherwise. "local" is always on.
+  default_targets: ["local"]    # local | github | jira | confluence | notion | linear
+  publish_before_review: false  # keep false: let the user see documents before they go out
+
+  github:
+    repo: ""                    # owner/name
+    docs_path: "docs/"
+    branch_prefix: "docs/"
+    open_pr: true
+    reviewers: []
+    # Put documents in the code PR when the change has one, rather than a separate PR.
+    prefer_existing_pr: true
+
+  jira:
+    project_key: ""             # e.g. ORD
+    attach_docx: true
+    comment_summary: true
+    # Leave empty unless the project genuinely uses these; inventing fields is worse
+    # than omitting them.
+    fields: {}
+
+  confluence:
+    space_key: ""
+    parent_page: ""             # title or page id
+    title_prefix: ""            # e.g. "ORD" -> "ORD-412 — HLD Delta: ..."
+    mermaid_macro: false        # true if the space has a Mermaid macro installed
+
+  notion:
+    database_id: ""
+    properties:                 # map document metadata -> Notion property names
+      scope: "Scope"
+      system: "System"
+      owner: "Owner"
+      status: "Status"
+
+  linear:
+    team: ""
+    attach_docx: true
+    link_to: "github"           # where the canonical document lives: github | notion | confluence
+
+personas:
+  # Always applied as review lenses. See references/personas.md.
+  always: ["enterprise_architect", "principal_engineer", "test_architect"]
+  # Activated by the interview when the change touches these areas. When
+  # devops_platform is off, the DevOps document is not produced at all.
+  conditional:
+    devops_platform: "ask"      # ask | always | never
+    data: "ask"
+  security_checklist: true      # applied to every document rather than sectioned off
+
+house_format:
+  # Optional overrides when the organisation has its own template.
+  reference_docx: ""            # path to a Word template; blank uses the bundled one
+  extra_sections: {}            # document key -> list of additional required sections,
+                                # e.g. hld: ["Regulatory mapping"]
+  omit_sections: {}             # document key -> sections to drop for this org

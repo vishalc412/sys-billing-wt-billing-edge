@@ -1,0 +1,67 @@
+# project-doc-set configuration for this run.
+# Filled from the document-generation-agent's run parameters; org_name and a couple of
+# publishing fields were not specified so sensible defaults were used — see the note below.
+
+organisation:
+  name: "Westfield"                       # ASSUMPTION: not specified in run parameters; inferred
+                                            # from the domain throughout the repo (westfieldgrp.corp,
+                                            # "Westfield" branding in pom.xml/mule-artifact.json).
+  system_name: "sapi-billing"
+  doc_owner: ""                            # ASSUMPTION: not known from the repo; leave blank.
+  accent_colour: "1F3864"
+
+output:
+  root: "docs"
+  dist: "docs/sapi-billing/dist"
+  diagrams: "docs/diagrams"
+  commit_docx: false
+  numbering: true
+
+publishing:
+  default_targets: ["local"]               # Per document-generation-agent Phase 9: do not publish
+  publish_before_review: false             # anywhere else unless explicitly asked.
+
+  github:
+    repo: ""
+    docs_path: "docs/"
+    branch_prefix: "docs/"
+    open_pr: true
+    reviewers: []
+    prefer_existing_pr: true
+
+  jira:
+    project_key: ""
+    attach_docx: true
+    comment_summary: true
+    fields: {}
+
+  confluence:
+    space_key: ""
+    parent_page: ""
+    title_prefix: ""
+    mermaid_macro: false
+
+  notion:
+    database_id: ""
+    properties:
+      scope: "Scope"
+      system: "System"
+      owner: "Owner"
+      status: "Status"
+
+  linear:
+    team: ""
+    attach_docx: true
+    link_to: "github"
+
+personas:
+  always: ["enterprise_architect", "principal_engineer", "test_architect"]
+  conditional:
+    devops_platform: "always"              # CI/CD (Mule_Trigger_Build.yml) and deployment topology
+    data: "ask"                            # are in scope for the requirements document.
+  security_checklist: true
+
+house_format:
+  reference_docx: ""
+  extra_sections: {}
+  omit_sections: {}

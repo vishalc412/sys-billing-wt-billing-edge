@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="primaryAccount-implementation-test-suite.xml" />
+	<munit:test name="primaryAccount-implementation-test-suite-primaryAccount-implementationTest" doc:id="cb4142a5-4a85-4fa5-b5b3-62d371819567" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock BillingService" doc:id="b737df54-b2d8-470b-a5cc-0d41ba90a15b" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="a3fa4438-8b6c-44ca-bb56-e50963e1324d" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;{&#10;  "accountBalance": 1363.00,&#10;  "accountNumber": "3476501380",&#10;  "billTocontact": {&#10;    "name": "DIFFERENT BILLED",&#10;    "address": {&#10;      "street": "15 W MARKET ST",&#10;      "city": "AKRON",&#10;      "state": "OH",&#10;      "zip": "44308"&#10;    }&#10;  },&#10;  "billingSystemCode": "BCMS",&#10;  "billType": "N",&#10;  "dueAmount": 0.00,&#10;  "dueDate": null,&#10;  "dateBilled": null,&#10;  "lastPaymentAmount": null,&#10;  "lastPaymentDate": null,&#10;  "eft": "false",&#10;  "pastDueAmount": null,&#10;  "pastDueDate": null,&#10;  "policies": [&#10;    {&#10;      "policyNumber": "543793R",&#10;      "hasEscrow": false&#10;    },&#10;    {&#10;      "policyNumber": "543791G",&#10;      "hasEscrow": true&#10;    }&#10;  ]&#10;}&#10;]' mediaType="application/json" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="samlResponse" value="#[output text/xml --- readUrl('classpath://primaryAccountimplementation200\mock_var_billingSAMLToken.dwl')]" mediaType="text/xml" encoding="UTF-8" />
+						<munit-tools:variable key="billingAccountNumber" value="#[output application/java --- readUrl('classpath://primaryAccountimplementation200\mock_var_billingAccountNumber.dwl')]" mediaType="application/json" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="b16cd16a-03a8-4cef-acae-1ccfc50349ab">
+				<munit:attributes value="#[readUrl('classpath://primaryAccountimplementation200\escrowAttributesConfig.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to primaryAccount-implementation" doc:id="ea3046ed-9c80-4f08-958e-839a92db09d7" name="primaryAccount-implementation"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert doc:name="Assert payload" doc:id="5c8f2131-bcdf-4f2f-9232-6bde749c7ade" message="The payload does not match" >
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import primaryAccountimplementation200::escrow_expected_response
+---
+escrow_expected_response::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

@@ -1,0 +1,28 @@
+#%RAML 1.0 Trait
+displayName: TimeCache
+usage: Apply this trait to a GET method that supports time-based caching.
+headers:
+  If-Modified-Since?:
+    type: datetime
+    description: Requests the resource only if it has been changed since the time provided in this the header. If the resource has not been modified, then HTTP status code '304 Not Modified' is returned instead of the actual resource.
+    example: 2017-03-21T16:50:00+00:00
+responses:
+  200:
+    description: The resource has been modified and returned in the body.
+    headers:
+      Last-Modified:
+        type: datetime
+        example: 2017-03-20T16:45:00+00:00
+      Cache-Control:
+        type: string
+        example: private, max-age=3600000
+  304:
+    description: The resource has not been modified, the body is empty and the version cached by the API consumer client may be used.
+    headers:
+      Last-Modified:
+        type: datetime
+        example: 2017-03-20T16:55:00+00:00
+      Cache-Control:
+        description: |
+        type: string
+        example: private, max-age=3600000

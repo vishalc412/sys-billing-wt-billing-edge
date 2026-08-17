@@ -1,0 +1,47 @@
+# stage. API Manager instance 15668558 (km:node/N-0004 ec 1).
+#
+# CFG-001-g / N-0101 ec 2: the legacy stage.properties has primaryAccount.host commented out and the
+# ESB host pointing at tst2esb rather than stageesb — stage calls the TEST ESB. That value is carried
+# forward VERBATIM and is NOT corrected. Nobody knows whether a stage ESB exists at all (R-023), so
+# "fixing" it could break stage outright. StartupConfigurationValidator emits a WARN naming the host
+# it resolved, which is what makes the oddity impossible to inherit unknowingly.
+billing:
+  api:
+    id: "15668558"
+    base-path: ${BILLING_BASE_PATH:/}
+  pasm-id-billing: "1988"
+  console:
+    enabled: true
+    path: /console
+  saml:
+    cache-ttl-seconds: 0
+    audience: ${BILLING_SAML_AUDIENCE}
+  backend:
+    esb:
+      # Verbatim from stage.properties: the TEST ESB. Deliberately not corrected (R-023).
+      host: ${BILLING_ESB_HOST:https://tst2esb.westfieldgrp.com}
+      connect-timeout: 10s
+      response-timeout: 30s
+    was:
+      host: ${BILLING_WAS_HOST}
+      connect-timeout: 10s
+      response-timeout: 10s
+    sts:
+      host: ${BILLING_STS_HOST}
+      connect-timeout: 5s
+      response-timeout: 10s
+    vault:
+      host: ${BILLING_VAULT_HOST}
+      connect-timeout: 5s
+      response-timeout: 10s
+  truststore:
+    location: ${BILLING_TRUSTSTORE_LOCATION}
+    password: ${BILLING_TRUSTSTORE_PASSWORD}
+    client-certificate: false
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${BILLING_JWT_ISSUER_URI}

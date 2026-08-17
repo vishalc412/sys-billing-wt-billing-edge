@@ -1,0 +1,3 @@
+^services/billing-edge/
+^kustomize/
+^\.muleshift/evidence/wp-001

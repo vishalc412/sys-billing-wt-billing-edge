@@ -1,0 +1,15 @@
+#%RAML 1.0 Trait
+displayName: Response Not Cacheable
+usage: Apply this trait to methods that supports caching.
+headers:
+  Cache-Control:
+    type: string
+    default: "no-cache, no-store, must-revalidate" 
+    example: "no-cache, no-store, must-revalidate"
+  Pragma:
+    type: string
+    default: "no-cache"
+    example: "no-cache" 
+  Expires:
+    type: integer
+    example: 0

@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+    <flow name="sapi-billing-search-main">
+        <http:listener path="${api.path}" config-ref="HTTP_Listener_config">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[output application/java
+---
+{
+	"x-correlation-id" : correlationId
+}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[output application/java
+---
+{
+	"x-correlation-id" : correlationId
+}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <flow-ref doc:name="setRequestResponse" doc:id="ad67afb7-048e-4680-95ad-76061bb1b99e" name="setRequestResponse" />
+        <flow-ref doc:name="api-entry-log-subflow" doc:id="2a55d395-d95c-47b0-bccd-67f26f1f8b98" name="api-entry-log-subflow" />
+        <apikit:router config-ref="sapi-billing-search-config" />
+        <flow-ref doc:name="api-exit-log-subflow" doc:id="2147d58e-0800-4de8-970d-76047841077e" name="api-exit-log-subflow" />
+        <flow-ref doc:name="responseLogFlow" doc:id="77efe349-42fe-420a-8422-30e6189b62ab" name="responseLogFlow" targetValue="#[requestResponseLog]" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+                <flow-ref doc:name="responseLogFlow" doc:id="4cd1c025-86d9-4403-9546-d15eb836a9c7" name="responseLogFlow" targetValue="#[requestResponseLog]" />
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+                <flow-ref doc:name="responseLogFlow" doc:id="bc41e8ec-fbe3-40fb-a8c6-2640256ec792" name="responseLogFlow" targetValue="#[requestResponseLog]" />
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+                <flow-ref doc:name="responseLogFlow" doc:id="68bb1e73-11d8-4c21-ae0d-c9e65b668662" name="responseLogFlow" targetValue="#[requestResponseLog]" />
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+                <flow-ref doc:name="responseLogFlow" doc:id="95e3ad2b-5d58-4251-be0d-ee0a3e4101a3" name="responseLogFlow" targetValue="#[requestResponseLog]" />
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+                <flow-ref doc:name="responseLogFlow" doc:id="8ffb01e0-1f95-4a5e-b381-30993845f053" name="responseLogFlow" targetValue="#[requestResponseLog]" />
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="864e8685-46ac-46d8-afe0-fdfba131a164">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+                <flow-ref doc:name="responseLogFlow" doc:id="b4ade946-58a2-48c8-8f65-367454fce776" name="responseLogFlow" targetValue="#[requestResponseLog]" />
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="38c851d5-65d9-4f9c-913e-89fd0cdf17d6">
+                <flow-ref doc:name="responseLogFlow" doc:id="b1236977-ed68-4753-91cb-6aa778fbabc2" name="responseLogFlow" targetValue="#[requestResponseLog]" />
+                <flow-ref doc:name="sapi-common-errorhandler" doc:id="941448b1-4dc7-48f5-9a0a-402f2332eeee" name="sapi-common-errorhandler" />
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="sapi-billing-search-console">
+        <http:listener path="/console/*" config-ref="HTTP_Listener_config">
+            <http:response statusCode="#[vars.httpStatus default 200]" />
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+            </http:error-response>
+        </http:listener>
+        <flow-ref doc:name="api-entry-log-subflow" doc:id="6c489381-2e03-472f-9878-855136850682" name="api-entry-log-subflow" />
+        <apikit:console config-ref="sapi-billing-search-config" />
+        <flow-ref doc:name="api-exit-log-subflow" doc:id="79fd1011-b1ee-44e8-bf37-77d17a320ae8" name="api-exit-log-subflow" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\externalPrimaryAccount\(billingAccountNumber)\account-billing:sapi-billing-search-config">
+        <json-logger:logger doc:name="EndpointLogger" doc:id="db57bf3f-0a7d-408c-a06e-c0bf4642fefd" config-ref="JSON_Logger_Config" message="endpointLogger" tracePoint="START" priority="INFO">
+            <json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+	identifier:"UWSAPI",
+	xApiKey: attributes.headers['x-api-key'] default "EMPTY",
+	api:p('api.name') ++ "-" ++ p('api.version'),
+	sub: (authentication.properties.userProperties.sub default 'EMPTY'),
+	act: (authentication.properties.userProperties.act.sub default 'EMPTY'),
+	impersonated: (!isEmpty(authentication.properties.userProperties.act)),
+	actEmail: (authentication.properties.userProperties.act.email default 'EMPTY'),
+	clientId: authentication.properties.clientId,
+	requestMethod: attributes.method,
+	requestUri: attributes.rawRequestUri,
+	uriTemplate: '/externalPrimaryAccount/{billingAccountNumber}/account-billing',
+	apiLayer: 'SAPI'
+}]]]></json-logger:content>
+        </json-logger:logger>
+        <set-variable value="#[attributes.uriParams]" doc:name="Set uriParam" doc:id="fa95f0ef-24c1-4f67-9377-d9e1bccfc258" variableName="params" />
+        <flow-ref doc:name="AccountDetailsFlow" doc:id="82abff67-0e31-4621-b638-e1e7b64a7f93" name="AccountDetailsFlow" />
+    </flow>
+    <flow name="get:\externalPrimaryAccount\(policyNumber)\policy-billing:sapi-billing-search-config">
+        <json-logger:logger doc:name="EndpointLogger" doc:id="a3d4c1fa-37c0-4d2c-9d9d-7bbf2e1aa3c5" config-ref="JSON_Logger_Config" message="endpointLogger" tracePoint="START" priority="INFO">
+            <json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+	identifier:"UWSAPI",
+	xApiKey: attributes.headers['x-api-key'] default "EMPTY",
+	api:p('api.name') ++ "-" ++ p('api.version'),
+	sub: (authentication.properties.userProperties.sub default 'EMPTY'),
+	act: (authentication.properties.userProperties.act.sub default 'EMPTY'),
+	impersonated: (!isEmpty(authentication.properties.userProperties.act)),
+	actEmail: (authentication.properties.userProperties.act.email default 'EMPTY'),
+	clientId: authentication.properties.clientId,
+	requestMethod: attributes.method,
+	requestUri: attributes.rawRequestUri,
+	uriTemplate: '/externalPrimaryAccount/{policyNumber}/policy-billing',
+	apiLayer: 'SAPI'
+}]]]></json-logger:content>
+        </json-logger:logger>
+        <set-variable value="#[attributes.uriParams]" doc:name="Set uriParam" doc:id="e52ed701-1b22-4803-a954-b5a432c4c331" variableName="params" />
+        <flow-ref doc:name="AccountDetailsFlow" doc:id="77ee2d1c-2110-44e3-a20a-987fe105ec8b" name="AccountDetailsFlow" />
+    </flow>
+    <flow name="get:\pastDueToday\(agencyCode):sapi-billing-search-config">
+        <json-logger:logger doc:name="EndpointLogger" doc:id="2244050d-cc9b-4de7-bcf8-157700732283" config-ref="JSON_Logger_Config" message="endpointLogger" tracePoint="START" priority="INFO">
+            <json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+	identifier:"UWSAPI",
+	xApiKey: attributes.headers['x-api-key'] default "EMPTY",
+	api:p('api.name') ++ "-" ++ p('api.version'),
+	sub: (authentication.properties.userProperties.sub default 'EMPTY'),
+	act: (authentication.properties.userProperties.act.sub default 'EMPTY'),
+	impersonated: (!isEmpty(authentication.properties.userProperties.act)),
+	actEmail: (authentication.properties.userProperties.act.email default 'EMPTY'),
+	clientId: authentication.properties.clientId,
+	requestMethod: attributes.method,
+	requestUri: attributes.rawRequestUri,
+	uriTemplate: '/pastDueToday/{agencyCode}',
+	apiLayer: 'SAPI'
+}]]]></json-logger:content>
+        </json-logger:logger>
+        <ee:transform doc:name="uri and query params" doc:id="0cfedb86-0324-4ae3-ac85-0b8b43f2c12e">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="agencyCode"><![CDATA[%dw 2.0
+output application/json
+---
+attributes.uriParams.agencyCode]]></ee:set-variable>
+                <ee:set-variable variableName="subAgenciesIncluded"><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.subAgenciesIncluded]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="get-past-due-today-flow" doc:id="44c51994-e0df-4a93-85fd-e256b9690730" name="get-past-due-today-flow" />
+    </flow>
+    <flow name="get:\pendingCancelToday\(agencyCode):sapi-billing-search-config">
+        <json-logger:logger doc:name="EndpointLogger" doc:id="246681df-6f64-4b0d-a082-6154147aafd2" config-ref="JSON_Logger_Config" message="endpointLogger" tracePoint="START" priority="INFO">
+            <json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+	identifier:"UWSAPI",
+	xApiKey: attributes.headers['x-api-key'] default "EMPTY",
+	api:p('api.name') ++ "-" ++ p('api.version'),
+	sub: (authentication.properties.userProperties.sub default 'EMPTY'),
+	act: (authentication.properties.userProperties.act.sub default 'EMPTY'),
+	impersonated: (!isEmpty(authentication.properties.userProperties.act)),
+	actEmail: (authentication.properties.userProperties.act.email default 'EMPTY'),
+	clientId: authentication.properties.clientId,
+	requestMethod: attributes.method,
+	requestUri: attributes.rawRequestUri,
+	uriTemplate: '/pendingCancelToday/{agencyCode}',
+	apiLayer: 'SAPI'
+}]]]></json-logger:content>
+        </json-logger:logger>
+        <ee:transform doc:name="uri and query params" doc:id="7f11c061-1252-48c0-8666-2655df4fe7a3">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="agencyCode"><![CDATA[%dw 2.0
+output application/json
+---
+attributes.uriParams.agencyCode]]></ee:set-variable>
+                <ee:set-variable variableName="subAgenciesIncluded"><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.subAgenciesIncluded]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="get-pending-cancellation-today-flow" doc:id="2ce85214-0f52-4a17-aef6-ba21ff80c4fb" name="get-pending-cancellation-today-flow" />
+    </flow>
+    <flow name="get:\info:sapi-billing-search-config">
+        <json-logger:logger doc:name="EndpointLogger" doc:id="b04e44f4-1493-43d1-8a22-2799a3f7a012" config-ref="JSON_Logger_Config" message="endpointLogger" tracePoint="START" priority="INFO">
+            <json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+	identifier:"UWSAPI",
+	xApiKey: attributes.headers['x-api-key'] default "EMPTY",
+	api:p('api.name') ++ "-" ++ p('api.version'),
+	sub: (authentication.properties.userProperties.sub default 'EMPTY'),
+	act: (authentication.properties.userProperties.act.sub default 'EMPTY'),
+	impersonated: (!isEmpty(authentication.properties.userProperties.act)),
+	actEmail: (authentication.properties.userProperties.act.email default 'EMPTY'),
+	clientId: authentication.properties.clientId,
+	requestMethod: attributes.method,
+	requestUri: attributes.rawRequestUri,
+	uriTemplate: '/info',
+	apiLayer: 'SAPI'
+}]]]></json-logger:content>
+        </json-logger:logger>
+        <set-payload value="#[output application/json --- {  &quot;buildNumber&quot; : p('buildNumber') default '0'  ,&quot;buildName&quot; : p('buildName') default '--'  ,&quot;gitCommitHash&quot; : p('gitCommitHash') default '--'  ,&quot;otherBuildInfo&quot;: p('otherBuildInfo') default '--'  ,&quot;currentTimeStamp&quot;: now() }]" doc:name="setBuildInfo" doc:id="0b7193c8-0d8e-4e3a-83e0-c9ae3c6d99fc" />
+    </flow>
+    <flow name="get:\primaryAccount:sapi-billing-search-config">
+        <flow-ref doc:name="primaryAccount-implementation" doc:id="03dc2922-bf8d-45df-a696-45923e026fd3" name="primaryAccount-implementation" />
+    </flow>
+    <flow name="get:\primaryAccount\transactions:sapi-billing-search-config">
+        <flow-ref doc:name="transactions-implementation" doc:id="438f8a0b-3256-42d4-8887-438d75954cdf" name="transactions-implementation" />
+    </flow>
+    <flow name="get:\primaryAccount\policy\escrow\transactions:sapi-billing-search-config">
+        <flow-ref doc:name="escrowTransactions-implementation" doc:id="c878536c-153a-44bf-b7a5-7c49623b96df" name="escrowTransactions-implementation"/>
+    </flow>
+</mule>

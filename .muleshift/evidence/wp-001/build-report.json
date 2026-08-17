@@ -1,0 +1,272 @@
+{
+  "schema_version": "1.0.0",
+  "packet": "WP-001",
+  "service": "billing-edge",
+  "branch": "s4/billing-edge",
+  "base": "scaffold-v1",
+  "head_commit": "a231931376e6d9fad3c39ef24f9967b6aafa2891",
+  "build": {
+    "command": "./mvnw -B clean verify",
+    "result": "SUCCESS",
+    "modules_built": 9,
+    "modules_skipped": 0,
+    "tests_run": 206,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "billing_edge_tests": 202
+  },
+  "acceptance_criteria": {
+    "total": 185,
+    "with_named_test": 185,
+    "without_named_test": [],
+    "by_task": {
+      "ADM-001": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 2
+      },
+      "ADM-002": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 0
+      },
+      "ADM-003": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 0
+      },
+      "ADM-004": {
+        "criteria": 7,
+        "covered": 7,
+        "parity_blocked": 1
+      },
+      "AUD-001": {
+        "criteria": 10,
+        "covered": 10,
+        "parity_blocked": 1
+      },
+      "AUD-002": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 0
+      },
+      "AUD-003": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 0
+      },
+      "AUD-004": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 1
+      },
+      "AUD-005": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 0
+      },
+      "AUD-006": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 1
+      },
+      "CFG-001": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 0
+      },
+      "CFG-002": {
+        "criteria": 9,
+        "covered": 9,
+        "parity_blocked": 0
+      },
+      "CON-001": {
+        "criteria": 7,
+        "covered": 7,
+        "parity_blocked": 0
+      },
+      "DEP-001": {
+        "criteria": 4,
+        "covered": 4,
+        "parity_blocked": 0
+      },
+      "ERR-001": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 1
+      },
+      "ERR-002": {
+        "criteria": 6,
+        "covered": 6,
+        "parity_blocked": 0
+      },
+      "ERR-003": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 1
+      },
+      "INF-001": {
+        "criteria": 7,
+        "covered": 7,
+        "parity_blocked": 1
+      },
+      "PAR-001": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 5
+      },
+      "PAR-002": {
+        "criteria": 9,
+        "covered": 9,
+        "parity_blocked": 8
+      },
+      "SEC-001": {
+        "criteria": 6,
+        "covered": 6,
+        "parity_blocked": 1
+      },
+      "SEC-002": {
+        "criteria": 6,
+        "covered": 6,
+        "parity_blocked": 1
+      },
+      "TOK-001": {
+        "criteria": 8,
+        "covered": 8,
+        "parity_blocked": 0
+      },
+      "TOK-002": {
+        "criteria": 10,
+        "covered": 10,
+        "parity_blocked": 2
+      }
+    }
+  },
+  "traceability": {
+    "migrated_from_nodes_referenced": [
+      "N-0001",
+      "N-0002",
+      "N-0004",
+      "N-0009",
+      "N-0011",
+      "N-0013",
+      "N-0015",
+      "N-0016",
+      "N-0019",
+      "N-0020",
+      "N-0021",
+      "N-0022",
+      "N-0023",
+      "N-0024",
+      "N-0025",
+      "N-0026",
+      "N-0027",
+      "N-0028",
+      "N-0029",
+      "N-0030",
+      "N-0031",
+      "N-0032",
+      "N-0035",
+      "N-0036",
+      "N-0043",
+      "N-0044",
+      "N-0049",
+      "N-0050",
+      "N-0051",
+      "N-0052",
+      "N-0068",
+      "N-0069",
+      "N-0070",
+      "N-0071",
+      "N-0072",
+      "N-0073",
+      "N-0084",
+      "N-0101"
+    ],
+    "unresolved_against_knowledge_slice": [],
+    "main_classes_without_annotation": []
+  },
+  "scope": {
+    "allowed_paths": [
+      "^services/billing-edge/",
+      "^kustomize/",
+      "^\\.muleshift/evidence/wp-001"
+    ],
+    "files_changed_outside_service_dir": [],
+    "contracts_touched": false,
+    "platform_interfaces_touched": false,
+    "sibling_services_touched": false
+  },
+  "dependencies": {
+    "added_this_packet": [
+      {
+        "groupId": "org.wiremock",
+        "artifactId": "wiremock-standalone",
+        "scope": "test",
+        "version_source": "platform-bom",
+        "rationale": "packet dependency_contracts require the STS and Thycotic to be stubbed with WireMock"
+      }
+    ],
+    "outside_platform_bom": [],
+    "artifact_messaging_clients": []
+  },
+  "parity": {
+    "status": "UNVERIFIED_PARITY",
+    "golden_payload_refs_declared": 26,
+    "golden_payload_refs_captured": 0,
+    "blocking_risks": [
+      "R-025",
+      "R-029",
+      "R-003",
+      "R-006"
+    ],
+    "note": "ADR-0021 requires this to be reported as unverified parity, never as parity. PAR-001 and PAR-002 are the capture tasks and both are blocked. ParityEvidenceTest asserts the gap mechanically rather than asserting a comparison against an expectation written by the migration author, which PAR-001-g prohibits by name."
+  },
+  "assumption_based_implementations": [
+    {
+      "adr": "ADR-0013",
+      "what": "token validation mode, scopes and rejection body",
+      "risk": "R-003"
+    },
+    {
+      "adr": "ADR-0016",
+      "what": "the unhandled-failure presenter implements an assumed contract",
+      "risk": "R-013"
+    },
+    {
+      "adr": "ADR-0037",
+      "what": "agency entitlement enforcement is NEW behaviour; the architect flagged this as the weakest decision",
+      "risk": "R-003"
+    },
+    {
+      "adr": "ADR-0007",
+      "what": "the STS wire protocol and whether the legacy caches the assertion",
+      "risk": "R-006"
+    },
+    {
+      "adr": "ADR-0008",
+      "what": "vault fetch/cache/outage behaviour",
+      "risk": "R-007"
+    }
+  ],
+  "defects_raised": [],
+  "defects_fixed_in_inherited_work": [
+    {
+      "what": "ResourcePathMasker.maskSegment was package-private while ADR-0015 requires the payload-logging path to share it",
+      "resolution": "made public rather than cloning the rule"
+    },
+    {
+      "what": "three tests read a JSON body as Map<?,?>, which AssertJ cannot match against String keys",
+      "resolution": "read as Map<String,Object>"
+    },
+    {
+      "what": "AUD-002-h expected the masked template to retain the query string",
+      "resolution": "expectation corrected; the template is built from the path half only so it stays groupable"
+    },
+    {
+      "what": "a draft SEC-002-f assertion expected agencyCodes on the per-endpoint record",
+      "resolution": "corrected to assert its deliberate absence per N-0036"
+    }
+  ]
+}

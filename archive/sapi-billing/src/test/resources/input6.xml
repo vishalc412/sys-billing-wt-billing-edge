@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Header>
+    <wfesb:Header xmlns:wfesb="http://www.westfieldgrp.com/wfesb-instance">
+      <wfesb:HeaderVersion>1.0</wfesb:HeaderVersion>
+      <wfesb:RequestProvider>
+        <wfesb:ServiceName>AccountAgreementManagement.AccountAgreementInquiry.retrieveAccountDetails</wfesb:ServiceName>
+        <wfesb:ServiceVersion>1.0</wfesb:ServiceVersion>
+      </wfesb:RequestProvider>
+      <wfesb:RequestFormat>
+        <wfesb:Dialect>IAAXML</wfesb:Dialect>
+        <wfesb:Version>1.0</wfesb:Version>
+      </wfesb:RequestFormat>
+      <wfesb:GlobalTransactionID>
+        <wfesb:ConsumerID>Westfield.Wescom.WOW</wfesb:ConsumerID>
+        <wfesb:ConsumerTransactionID>57ef5d3a7ef434f70acf31d91e51c6a9</wfesb:ConsumerTransactionID>
+      </wfesb:GlobalTransactionID>
+    </wfesb:Header>
+  </soapenv:Header>
+  <soapenv:Body>
+    <RetrieveAccountDetailsRequest xmlns="http://www.ibm.com/industries/financialservices/IAAXML">
+      <queryCriteria>
+        <policyNumber>5088401</policyNumber>
+      </queryCriteria>
+    </RetrieveAccountDetailsRequest>
+  </soapenv:Body>
+</soapenv:Envelope>

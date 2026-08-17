@@ -1,0 +1,27 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                   xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+                   xmlns:wst="http://docs.oasis-open.org/ws-sx/ws-trust/200512"
+                   xmlns:wsa="http://www.w3.org/2005/08/addressing"
+                   xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy">
+    <soapenv:Header>
+        <wsse:Security soapenv:mustUnderstand="1">
+            <wsse:UsernameToken>
+                <wsse:Username>${USERNAME}</wsse:Username>
+                <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${PASSWORD}</wsse:Password>
+            </wsse:UsernameToken>
+        </wsse:Security>
+        <wsa:Action soapenv:mustUnderstand="1">http://docs.oasis-open.org/ws-sx/ws-trust/200512/RST/Issue</wsa:Action>
+    </soapenv:Header>
+    <soapenv:Body>
+        <wst:RequestSecurityToken>
+            <wst:TokenType>urn:oasis:names:tc:SAML:2.0:assertion</wst:TokenType>
+            <wst:RequestType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Issue</wst:RequestType>
+            <wsp:AppliesTo>
+                <wsa:EndpointReference>
+                    <wsa:Address>${WSA_ADDRESS}</wsa:Address>
+                </wsa:EndpointReference>
+            </wsp:AppliesTo>
+            <wst:KeyType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Bearer</wst:KeyType>
+        </wst:RequestSecurityToken>
+    </soapenv:Body>
+</soapenv:Envelope>
