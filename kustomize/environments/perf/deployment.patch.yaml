@@ -10,9 +10,9 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: perf
-            - name: PRIMARY_ACCOUNT_HOST
-              value: perfesb.westfieldgrp.corp
-            - name: EXTERNAL_PRIMARY_ACCOUNT_HOST
-              value: wassvcr.westfieldgrp.corp
-            - name: PING_FED_HOST
-              value: idpa1-test.westfieldgrp.corp
+            - name: BILLING_ESB_HOST
+              value: http://perfesb.westfieldgrp.corp
+            - name: BILLING_WAS_HOST
+              value: http://wassvcr.westfieldgrp.corp
+            - name: BILLING_STS_HOST
+              value: https://idpa1-test.westfieldgrp.corp

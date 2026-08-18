@@ -82,6 +82,14 @@ public final class InboundAdmissionRule {
             // implementation logic and no backend call run (ADM-002-g, SEC-001-a, SEC-001-b).
             return Optional.of(ContractViolation.BAD_REQUEST);
         }
+        if (!isBearerScheme(authorization)) {
+            // DEF-0101 (ADR-0013): a present Authorization header whose scheme is not Bearer must not
+            // reach the implementation. The OAuth2 resource server only validates a Bearer token, so
+            // any other scheme (Basic, a garbage no-scheme value) used to satisfy admission and skip
+            // validation — an auth bypass. Reject with 401 here: the header is present (not a 400
+            // contract violation) but no token was validated, so no operation is reachable.
+            return Optional.of(ContractViolation.UNAUTHORIZED);
+        }
         Map<String, String> pathParameters = resource.pathParameters(path);
         for (Map.Entry<String, Integer> rule : ApiResource.EXACT_LENGTH_PARAMETERS.entrySet()) {
             String name = rule.getKey();
@@ -131,5 +139,16 @@ public final class InboundAdmissionRule {
         }
         String mediaType = contentType.toLowerCase(Locale.ROOT).split(";")[0].trim();
         return mediaType.equals("application/json") || mediaType.endsWith("+json");
+    }
+
+    /**
+     * DEF-0101: the only Authorization scheme the resource server validates is {@code Bearer}. A
+     * header whose first token (the scheme) is not {@code Bearer}, case-insensitively, is rejected
+     * before the impl runs. A value with no space (no scheme) is treated as a non-Bearer scheme.
+     */
+    private static boolean isBearerScheme(String authorization) {
+        int space = authorization.indexOf(' ');
+        String scheme = space < 0 ? authorization : authorization.substring(0, space);
+        return "bearer".equalsIgnoreCase(scheme.trim());
     }
 }

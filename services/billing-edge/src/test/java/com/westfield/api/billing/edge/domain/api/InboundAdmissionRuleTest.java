@@ -225,12 +225,17 @@ class InboundAdmissionRuleTest {
     }
 
     @Test // ADM-003-g
-    @DisplayName("g: all six bodies are the single-field shape and deliberately NOT the published fault type")
+    @DisplayName("g: all bodies are the single-field shape and deliberately NOT the published fault type")
     void bodiesAreTheSingleFieldShapeNotThePublishedFaultType() {
         // ADR-0042 PRESERVE. The legacy RAML publishes a commonError type with faultActor, faultCode,
         // faultMessage, faultDetail, faultTime and innerFault. The application has never emitted it.
         // The contract was rewritten to match the code rather than the other way round, and this
         // assertion is what stops someone "correcting" the code towards the old published type.
+        //
+        // The seven values include the six legacy routing classes plus UNAUTHORIZED (401), added for
+        // DEF-0101 to reject a non-Bearer Authorization header before the implementation runs. It
+        // carries the same single-field shape; it is not one of the legacy six, which is why the count
+        // is seven and not six.
         List<String> publishedFaultTypeFields = List.of(
                 "faultActor", "faultCode", "faultMessage", "faultDetail", "faultTime", "innerFault");
 
@@ -239,6 +244,6 @@ class InboundAdmissionRuleTest {
             assertThat(body).hasSize(1).containsOnlyKeys("message");
             assertThat(body.keySet()).doesNotContainAnyElementsOf(publishedFaultTypeFields);
         }
-        assertThat(ContractViolation.values()).hasSize(6);
+        assertThat(ContractViolation.values()).hasSize(7);
     }
 }

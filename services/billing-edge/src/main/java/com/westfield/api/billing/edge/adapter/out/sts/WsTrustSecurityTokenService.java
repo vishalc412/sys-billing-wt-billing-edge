@@ -1,10 +1,12 @@
 package com.westfield.api.billing.edge.adapter.out.sts;
 
+import com.westfield.api.billing.edge.adapter.out.tls.OutboundTrustMaterial;
 import com.westfield.api.billing.edge.application.port.SecurityTokenService;
 import com.westfield.api.billing.edge.application.port.ServiceAccountCredentials;
 import com.westfield.api.billing.edge.config.BillingEdgeProperties;
 import com.westfield.api.billing.platform.observability.MigratedFrom;
 import com.westfield.api.billing.platform.spi.BackendAssertionProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -57,9 +59,16 @@ public class WsTrustSecurityTokenService implements SecurityTokenService {
     private final BillingEdgeProperties properties;
     private final HttpClient httpClient;
 
+    // DEF-0100: @Autowired marks this as the constructor Spring uses; the class declares a second
+    // package-private test seam taking an HttpClient, and with two constructors and no marker Spring
+    // cannot choose (it falls back to a no-arg constructor that does not exist).
+    @Autowired
     public WsTrustSecurityTokenService(BillingEdgeProperties properties) {
         this(properties, HttpClient.newBuilder()
                 .connectTimeout(properties.getBackend().getSts().getConnectTimeout())
+                // DEF-0105: validate the STS certificate against the CONFIGURED trust material, not the
+                // JVM default (cacerts). Both back ends share one trust context (N-0014 ec 1).
+                .sslContext(OutboundTrustMaterial.sslContextFrom(properties.getTruststore()))
                 .build());
     }
 

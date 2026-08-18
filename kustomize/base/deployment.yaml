@@ -25,32 +25,35 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: dev
-            - name: PRIMARY_ACCOUNT_HOST
-              value: dev5esb.westfieldgrp.corp
-            - name: EXTERNAL_PRIMARY_ACCOUNT_HOST
-              value: wassvcu.westfieldgrp.corp
-            - name: PING_FED_HOST
-              value: idpa1-test.westfieldgrp.corp
-            - name: BILLING_SAML_USERNAME
+            # DEF-0110 (CFG-001-c/d): the env-var names now match the ${BILLING_*} placeholders
+            # application-prod.yaml reads, so a deployment built from kustomize/ can start. The
+            # non-BILLING names the manifests previously set (PRIMARY_ACCOUNT_HOST,
+            # EXTERNAL_PRIMARY_ACCOUNT_HOST, PING_FED_HOST, OAUTH_ISSUER_URI, TRUSTSTORE_PASSWORD,
+            # BILLING_SAML_USERNAME/PASSWORD) were read by no profile and are removed.
+            - name: BILLING_BASE_PATH
+              value: /
+            - name: BILLING_SAML_AUDIENCE
+              value: urn:sts:mulesoft:unt:to:saml:nonprod
+            - name: BILLING_ESB_HOST
+              value: http://dev5esb.westfieldgrp.corp
+            - name: BILLING_WAS_HOST
+              value: http://wassvcu.westfieldgrp.corp
+            - name: BILLING_STS_HOST
+              value: https://idpa1-test.westfieldgrp.corp
+            - name: BILLING_VAULT_HOST
+              value: https://vault.westfieldgrp.corp
+            - name: BILLING_TRUSTSTORE_LOCATION
+              value: file:/etc/sys-billing/truststore/truststore.jks
+            - name: BILLING_TRUSTSTORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: billing-secrets
-                  key: billing-saml-username
-            - name: BILLING_SAML_PASSWORD
+                  key: billing-truststore-password
+            - name: BILLING_JWT_ISSUER_URI
               valueFrom:
                 secretKeyRef:
                   name: billing-secrets
-                  key: billing-saml-password
-            - name: TRUSTSTORE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: billing-secrets
-                  key: truststore-password
-            - name: OAUTH_ISSUER_URI
-              valueFrom:
-                secretKeyRef:
-                  name: billing-secrets
-                  key: oauth-issuer-uri
+                  key: billing-jwt-issuer-uri
           volumeMounts:
             - name: truststore
               mountPath: /etc/sys-billing/truststore

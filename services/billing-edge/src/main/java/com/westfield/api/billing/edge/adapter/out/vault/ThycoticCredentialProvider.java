@@ -2,10 +2,12 @@ package com.westfield.api.billing.edge.adapter.out.vault;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.westfield.api.billing.edge.adapter.out.tls.OutboundTrustMaterial;
 import com.westfield.api.billing.edge.application.port.CredentialProvider;
 import com.westfield.api.billing.edge.application.port.ServiceAccountCredentials;
 import com.westfield.api.billing.edge.config.BillingEdgeProperties;
 import com.westfield.api.billing.platform.observability.MigratedFrom;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -43,9 +45,16 @@ public class ThycoticCredentialProvider implements CredentialProvider {
     private final AtomicReference<CachedSecret> cachedUsername = new AtomicReference<>();
     private final AtomicReference<CachedSecret> cachedPassword = new AtomicReference<>();
 
+    // DEF-0100: @Autowired marks this as the constructor Spring uses; the class declares a second
+    // package-private test seam taking an HttpClient, and with two constructors and no marker Spring
+    // cannot choose (it falls back to a no-arg constructor that does not exist).
+    @Autowired
     public ThycoticCredentialProvider(BillingEdgeProperties properties, ObjectMapper objectMapper, Clock clock) {
         this(properties, objectMapper, clock, HttpClient.newBuilder()
                 .connectTimeout(properties.getBackend().getVault().getConnectTimeout())
+                // DEF-0105: validate the secret-store certificate against the CONFIGURED trust material,
+                // not the JVM default (cacerts). ADR-0041 / TOK-001-h.
+                .sslContext(OutboundTrustMaterial.sslContextFrom(properties.getTruststore()))
                 .build());
     }
 

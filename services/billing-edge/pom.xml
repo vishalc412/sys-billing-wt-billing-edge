@@ -81,7 +81,59 @@
           <mainClass>com.westfield.api.billing.edge.SysBillingApplication</mainClass>
         </configuration>
         <executions>
-          <execution><goals><goal>repackage</goal></goals></execution>
+          <execution>
+            <id>generate-build-info</id>
+            <!--
+              DEF-0109 (ADR-0018, INF-001-a/c): generate META-INF/build-info.properties so
+              BuildProperties is auto-configured and /info reports real build provenance instead of
+              the legacy '0' buildNumber and textual placeholder defaults. The legacy ships a
+              checked-in buildInfo.properties carrying unsubstituted @pomBuildNumber@ tokens that
+              resolve to their own text; the generated file cannot, and the enforcer + startup check
+              below make that a hard failure.
+            -->
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>build-info</goal>
+            </goals>
+            <configuration>
+              <additionalProperties>
+                <!-- BuildProperties has no standard "number" key; expose the build timestamp as the
+                  build number so /info's buildNumber is real and not the '0' default. -->
+                <number>${maven.build.timestamp}</number>
+              </additionalProperties>
+            </configuration>
+          </execution>
+          <execution><id>repackage</id><goals><goal>repackage</goal></goals></execution>
+        </executions>
+      </plugin>
+      <!--
+        DEF-0109 (INF-001-c): a build-time guard complementing BuildMetadataAdapter's startup
+        validateNoUnsubstitutedTokens. requireMavenVersion/requireJavaVersion fail the build when the
+        toolchain does not match the supported one; the generated build-info.properties (not a
+        checked-in file) cannot carry an unsubstituted @…@/${…} token, so a legacy-style unfiltered
+        build cannot recur silently.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-build-provenance</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <version>[3.9,)</version>
+                </requireMavenVersion>
+                <requireJavaVersion>
+                  <version>[21,)</version>
+                </requireJavaVersion>
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>

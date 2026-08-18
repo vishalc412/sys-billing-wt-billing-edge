@@ -59,32 +59,13 @@ public class S5TestSupport {
     }
 
     /**
-     * DEF-0100 work-around, present only so that the REST of the assembly can be verified.
-     *
-     * <p>{@code ThycoticCredentialProvider} and {@code WsTrustSecurityTokenService} each declare two
-     * constructors and no {@code @Autowired}, so Spring cannot instantiate either and the context dies
-     * before anything else can be observed. These two definitions construct the same classes through
-     * their public production constructors — exactly what Spring would do if the ambiguity were
-     * resolved — so nothing about the behaviour under test is altered. The defect itself is asserted
-     * separately in {@code S5ContextStartupTest}; this is not a fix and no production code is touched.
+     * Stub {@link JwtDecoder} so a booted context does not perform OIDC discovery against an
+     * unreachable IdP at bean-creation time. Every profile configures {@code issuer-uri}, so without
+     * this substitution no profile can boot in a test environment. This is a test-environment
+     * substitution, not a DEF-0100 work-around: the two outbound adapters are now instantiated by
+     * Spring through their {@code @Autowired} production constructors, so no bean overriding is
+     * needed and {@code spring.main.allow-bean-definition-overriding} is no longer set anywhere.
      */
-    @Bean
-    public com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProvider
-            thycoticCredentialProvider(
-            com.westfield.api.billing.edge.config.BillingEdgeProperties properties,
-            com.fasterxml.jackson.databind.ObjectMapper objectMapper,
-            java.time.Clock clock) {
-        return new com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProvider(
-                properties, objectMapper, clock);
-    }
-
-    @Bean
-    public com.westfield.api.billing.edge.adapter.out.sts.WsTrustSecurityTokenService
-            wsTrustSecurityTokenService(
-            com.westfield.api.billing.edge.config.BillingEdgeProperties properties) {
-        return new com.westfield.api.billing.edge.adapter.out.sts.WsTrustSecurityTokenService(properties);
-    }
-
     @Bean
     public JwtDecoder jwtDecoder() {
         return token -> {

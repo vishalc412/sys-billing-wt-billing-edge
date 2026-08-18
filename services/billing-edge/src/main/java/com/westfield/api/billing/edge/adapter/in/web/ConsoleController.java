@@ -48,7 +48,7 @@ public class ConsoleController {
         this.resourceLoader = resourceLoader;
     }
 
-    @GetMapping(path = {"${billing.console.path:/console}", "${billing.console.path:/console}/**"})
+    @GetMapping(path = "${billing.console.path:/console}")
     @MigratedFrom(value = "km:node/N-0032", note = "console listener: 200 by default, no correlation id echoed")
     public ResponseEntity<?> console() throws IOException {
         if (!properties.getConsole().isEnabled()) {
@@ -63,6 +63,18 @@ public class ConsoleController {
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_HTML)
                 .body(browsableDocument(yaml));
+    }
+
+    /**
+     * DEF-0103 / CON-001-b: a sub-path under the console (e.g. {@code /console/does-not-exist}) is an
+     * unknown console path and answers the same fixed 404 body the main API uses (N-0033). Mapped
+     * separately from the exact console path so the contract resolves only at the configured path,
+     * not under any sub-tree of it.
+     */
+    @GetMapping(path = "${billing.console.path:/console}/**")
+    @MigratedFrom(value = "km:node/N-0033", note = "console NOT_FOUND: same fixed body as the main router")
+    public ResponseEntity<Map<String, Object>> unknownConsolePath() {
+        return notFound();
     }
 
     private static ResponseEntity<Map<String, Object>> notFound() {

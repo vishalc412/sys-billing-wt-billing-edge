@@ -285,8 +285,13 @@ public class BillingEdgeProperties {
     public static class Console {
         private boolean enabled = true;
         private String path = "/console";
-        /** The published contract this console browses. Not copied into the artifact. */
-        private String contractLocation = "file:contracts/billing-edge/openapi.yaml";
+        /**
+         * The published contract this console browses. Packaged into the artifact and resolved from
+         * the classpath (DEF-0103 / CON-001-a), so the console serves the contract in any environment
+         * regardless of the process working directory. Production overrides enablement, not the
+         * location.
+         */
+        private String contractLocation = "classpath:contracts/billing-edge/openapi.yaml";
 
         public boolean isEnabled() {
             return enabled;

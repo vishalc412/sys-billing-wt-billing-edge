@@ -3,7 +3,7 @@ package com.westfield.api.billing.edge.domain.api;
 import com.westfield.api.billing.platform.observability.MigratedFrom;
 
 /**
- * The six routing failure classes the contract router produces, with the EXACT legacy status and
+ * The routing failure classes the contract router produces, with the EXACT legacy status and
  * body (N-0024 … N-0029).
  *
  * <p>The body is one field and a fixed string. A caller cannot tell which of several possible
@@ -25,6 +25,15 @@ public enum ContractViolation {
     /** Parameter length, missing required query parameter, or missing Authorization header. */
     @MigratedFrom("km:node/N-0024")
     BAD_REQUEST(400, "Bad request"),
+
+    /**
+     * A present Authorization header whose scheme is not {@code Bearer} (DEF-0101, ADR-0013). The
+     * resource server only validates a Bearer token; any other scheme used to slip past validation
+     * and reach the implementation. The admission funnel rejects it with 401 before any impl runs,
+     * because the header is present (so not a 400 contract violation) but no token was validated.
+     */
+    @MigratedFrom("km:node/N-0024")
+    UNAUTHORIZED(401, "Unauthorized"),
 
     /** Path the contract does not define. Routing-level only — see {@link #NOT_FOUND} note. */
     @MigratedFrom("km:node/N-0025")

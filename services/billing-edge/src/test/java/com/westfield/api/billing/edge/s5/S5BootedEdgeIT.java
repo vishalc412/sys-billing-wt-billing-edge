@@ -22,17 +22,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * The admission funnel, /info and /console against a REAL booted container on a real socket.
  *
- * <p>Every assertion here is an observation. Where the observed behaviour contradicts the packet's
- * acceptance criterion or the frozen contract, the test asserts the OBSERVED value and names the
- * defect in the display name, so the evidence pack has a reproduction to point at rather than a
- * green test that hides the divergence. That is deliberate: an S5 test that asserted the criterion
- * and failed would be reverted by the next build; an S5 test that asserts the observation makes the
- * divergence permanent evidence.
+ * <p>These assertions now describe the CORRECTED behaviour. The defects they used to record are
+ * fixed; each flipped assertion names the defect it closed in its display name. {@code
+ * spring.main.allow-bean-definition-overriding} is no longer set: the two outbound adapters are
+ * instantiated by Spring through their {@code @Autowired} production constructors (DEF-0100), so no
+ * bean overriding is needed.
  */
 @SpringBootTest(
         classes = {com.westfield.api.billing.edge.SysBillingApplication.class, S5TestSupport.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.main.allow-bean-definition-overriding=true")
+        // DEF-0109: supply a git-commit so every /info provenance field is real, not the '--' default.
+        // The build-info-sourced fields come from META-INF/build-info.properties (build-info goal).
+        properties = "billing.build.git-commit=s5-test-commit-sha")
 @ActiveProfiles("local")
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("S5 — the booted billing-edge container")
@@ -76,17 +77,26 @@ class S5BootedEdgeIT {
                 .contains("otherBuildInfo").contains("timestamp");
     }
 
-    @Test // INF-001-a, INF-001-b, INF-001-e — DEF-0109 observed on the wire
-    @DisplayName("INF-001-a: /info reports the '0'/'--' unavailable defaults for EVERY provenance field (DEF-0109)")
-    void infoCannotIdentifyTheBuildItIsRunning() {
+    @Test // INF-001-a, INF-001-b, INF-001-e — DEF-0109 fixed: real provenance on the wire
+    @DisplayName("INF-001-a: /info reports real build provenance, not the '0'/'--' unavailable defaults (DEF-0109 fixed)")
+    void infoReportsRealBuildProvenance() {
         ResponseEntity<String> response = get("/info", bearer(S5TestSupport.VALID));
+        String body = response.getBody();
 
-        // INF-001-b's defaults are correct and reachable; INF-001-a's happy path is not, because the
-        // build never produces META-INF/build-info.properties for BuildProperties to be built from.
-        assertThat(response.getBody()).contains("\"buildNumber\":\"0\"");
-        assertThat(response.getBody()).contains("\"buildName\":\"--\"");
-        assertThat(response.getBody()).contains("\"gitCommit\":\"--\"");
-        assertThat(response.getBody()).contains("\"otherBuildInfo\":\"--\"");
+        // The build-info goal generates META-INF/build-info.properties at generate-resources, so
+        // BuildProperties is auto-configured and the adapter reports real values instead of the
+        // '0'/'--' unavailable defaults. gitCommit comes from billing.build.git-commit (set in the
+        // @SpringBootTest properties above).
+        assertThat(body).contains("\"buildNumber\":\"");
+        assertThat(body).doesNotContain("\"buildNumber\":\"0\"");
+        assertThat(body).doesNotContain("\"buildName\":\"--\"");
+        assertThat(body).doesNotContain("\"gitCommit\":\"--\"");
+        assertThat(body).doesNotContain("\"otherBuildInfo\":\"--\"");
+        // Positive checks: the build-info-sourced fields carry the project name and version, and the
+        // git-commit carries the value supplied by configuration.
+        assertThat(body).contains("\"buildName\":\"billing-edge\"");
+        assertThat(body).contains("\"otherBuildInfo\":\"0.1.0-SNAPSHOT\"");
+        assertThat(body).contains("\"gitCommit\":\"s5-test-commit-sha\"");
     }
 
     @Test // INF-001-e
@@ -130,7 +140,7 @@ class S5BootedEdgeIT {
     }
 
     // -------------------------------------------------------------------------------------------
-    // ADM-003 — the six contract-violation classes, observed on the wire.
+    // ADM-003 — the routing failure classes, observed on the wire.
     // -------------------------------------------------------------------------------------------
 
     @Test // ADM-003-b
@@ -232,19 +242,19 @@ class S5BootedEdgeIT {
     }
 
     // -------------------------------------------------------------------------------------------
-    // SEC-001 — the token requirement, observed on the wire. DEF-0101 lives here.
+    // SEC-001 — the token requirement, observed on the wire. DEF-0101 fixed.
     // -------------------------------------------------------------------------------------------
 
     @Test // SEC-001-b, ADM-003-a
-    @DisplayName("SEC-001-b: /info with no Authorization header is rejected — but with 400, which the frozen contract does not declare (DEF-0102)")
+    @DisplayName("SEC-001-b: /info with no Authorization header is rejected — 400 is undeclared (DEF-0102, contract)")
     void infoWithoutAuthorizationIsRejectedWith400NotThe401TheContractDeclares() {
         ResponseEntity<String> response = get("/info", new HttpHeaders());
 
         // The criterion only asks that it be REJECTED, and it is.
         assertThat(response.getStatusCode().is2xxSuccessful()).isFalse();
-        // The observation: 400 with the one-field body. contracts/billing-edge/openapi.yaml declares
-        // 200/401/500 for getBuildInfo and documents 401 as "No token, or a token the service
-        // rejected". 400 is undeclared. Recorded as DEF-0102 (contract defect).
+        // 400 with the one-field body. contracts/billing-edge/openapi.yaml declares 200/401/500 for
+        // getBuildInfo and documents 401 as "No token, or a token the service rejected". 400 is
+        // undeclared. Recorded as DEF-0102 (contract defect) — out of scope for this dispatch.
         assertThat(response.getStatusCode().value()).isEqualTo(400);
         assertThat(response.getBody()).isEqualTo("{\"message\":\"Bad request\"}");
     }
@@ -257,33 +267,34 @@ class S5BootedEdgeIT {
         assertThat(response.getStatusCode().value()).isEqualTo(401);
     }
 
-    @Test // SEC-001-a — DEF-0101
-    @DisplayName("SEC-001-a: a NON-bearer Authorization header reaches the implementation unauthenticated (DEF-0101)")
-    void nonBearerAuthorizationHeaderBypassesTokenValidationEntirely() {
+    @Test // SEC-001-a — DEF-0101 fixed
+    @DisplayName("SEC-001-a: a NON-bearer Authorization header is rejected 401, not admitted (DEF-0101 fixed)")
+    void nonBearerAuthorizationHeaderIsRejectedWith401() {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Basic YWRtaW46YWRtaW4=");
 
         ResponseEntity<String> response = get("/info", headers);
 
-        // SecurityConfiguration authorizes anyRequest().permitAll(); the bearer filter only engages
-        // when the scheme is Bearer, and InboundAdmissionRule only checks that the header is
-        // non-blank. So an arbitrary Authorization value satisfies admission AND skips validation.
+        // DEF-0101: InboundAdmissionRule now rejects any Authorization header whose scheme is not
+        // Bearer with the UNAUTHORIZED (401) one-field body. SEC-001-a's intent — a request without a
+        // bearer token never reaches the implementation — now holds.
         assertThat(response.getStatusCode().value())
-                .as("SEC-001-a asserts that a request without a bearer token is rejected and no "
-                        + "implementation logic runs. It reached the implementation and answered 200.")
-                .isEqualTo(200);
-        assertThat(response.getBody()).contains("buildNumber");
+                .as("a non-bearer Authorization scheme must be rejected, not admitted")
+                .isEqualTo(401);
+        assertThat(response.getBody()).isEqualTo("{\"message\":\"Unauthorized\"}");
+        assertThat(response.getBody()).doesNotContain("buildNumber");
     }
 
-    @Test // SEC-001-a — DEF-0101, second shape
-    @DisplayName("SEC-001-a: a garbage Authorization value also reaches the implementation (DEF-0101)")
-    void garbageAuthorizationValueAlsoReachesTheImplementation() {
+    @Test // SEC-001-a — DEF-0101 fixed, second shape
+    @DisplayName("SEC-001-a: a garbage Authorization value is rejected 401, not admitted (DEF-0101 fixed)")
+    void garbageAuthorizationValueIsRejectedWith401() {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "not-even-a-scheme");
 
         ResponseEntity<String> response = get("/info", headers);
 
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getStatusCode().value()).isEqualTo(401);
+        assertThat(response.getBody()).isEqualTo("{\"message\":\"Unauthorized\"}");
     }
 
     // -------------------------------------------------------------------------------------------
@@ -337,7 +348,7 @@ class S5BootedEdgeIT {
                 .isEqualTo(403);
     }
 
-    @Test // SEC-002 — DEF-0106: claim shape robustness
+    @Test // SEC-002 — DEF-0106: claim shape robustness (fail-closed unchanged)
     @DisplayName("SEC-002: a malformed agencyCodes claim (object, not list) denies rather than failing (fail-closed)")
     void malformedAgencyClaimFailsClosed() {
         String token = S5TestSupport.tokenWith("s5-malformed-claim",
@@ -351,29 +362,35 @@ class S5BootedEdgeIT {
                 .isEqualTo(403);
     }
 
-    @Test // SEC-002 — DEF-0106
-    @DisplayName("SEC-002: an entitled caller whose claim differs only in CASE is denied (DEF-0106)")
-    void caseDifferingAgencyCodeIsDenied() {
+    @Test // SEC-002 — DEF-0106 fixed: case-insensitive comparison admits the caller the legacy served
+    @DisplayName("SEC-002: an entitled caller whose claim differs only in CASE is admitted (DEF-0106 fixed)")
+    void caseDifferingAgencyCodeIsAdmitted() {
         String token = S5TestSupport.tokenWith("s5-lowercase-claim",
                 Map.of("sub", "u1", "clientId", "client-c", "agencyCodes", List.of("a0421")));
 
         ResponseEntity<String> response = get("/pastDueToday/A0421?environment=TEST", bearer(token));
 
+        // DEF-0106: both sides are normalised (trim + uppercase) before exact match, so a caller whose
+        // claim differs only in case is the same caller the legacy served. Admitted past the
+        // entitlement filter, then meets the declared-but-unimplemented endpoint (501).
         assertThat(response.getStatusCode().value())
-                .as("AgencyEntitlementRule uses List#contains, an exact byte comparison. Fail-closed, "
-                        + "but it denies a caller the legacy served and ADR-0037 does not state a "
-                        + "comparison rule.")
-                .isEqualTo(403);
+                .as("a case-only difference must not deny an entitled caller")
+                .isNotEqualTo(403);
+        assertThat(response.getStatusCode().value()).isEqualTo(501);
     }
 
-    @Test // SEC-002 — DEF-0106
-    @DisplayName("SEC-002: an entitled caller whose claim is whitespace-padded is denied (DEF-0106)")
-    void whitespacePaddedAgencyCodeIsDenied() {
+    @Test // SEC-002 — DEF-0106 fixed: whitespace-padded comparison admits the caller
+    @DisplayName("SEC-002: an entitled caller whose claim is whitespace-padded is admitted (DEF-0106 fixed)")
+    void whitespacePaddedAgencyCodeIsAdmitted() {
         String token = S5TestSupport.tokenWith("s5-padded-claim",
                 Map.of("sub", "u1", "clientId", "client-w", "agencyCodes", List.of(" A0421 ")));
 
-        assertThat(get("/pastDueToday/A0421?environment=TEST", bearer(token)).getStatusCode().value())
-                .isEqualTo(403);
+        ResponseEntity<String> response = get("/pastDueToday/A0421?environment=TEST", bearer(token));
+
+        assertThat(response.getStatusCode().value())
+                .as("a whitespace-only difference must not deny an entitled caller")
+                .isNotEqualTo(403);
+        assertThat(response.getStatusCode().value()).isEqualTo(501);
     }
 
     @Test // SEC-002-a — the entitled path
@@ -389,23 +406,22 @@ class S5BootedEdgeIT {
     }
 
     // -------------------------------------------------------------------------------------------
-    // CON-001 — the documentation console, observed on the wire. DEF-0103 lives here.
+    // CON-001 — the documentation console, observed on the wire. DEF-0103 fixed.
     // -------------------------------------------------------------------------------------------
 
-    @Test // CON-001-a — DEF-0103
-    @DisplayName("CON-001-a: the console cannot serve the contract from a booted service (DEF-0103)")
-    void consoleCannotResolveTheContractFromABootedService() {
+    @Test // CON-001-a — DEF-0103 fixed
+    @DisplayName("CON-001-a: the console serves the published contract from a booted service (DEF-0103 fixed)")
+    void consoleServesTheContractFromABootedService() {
         ResponseEntity<String> response = get("/console", new HttpHeaders());
 
-        // billing.console.contract-location defaults to file:contracts/billing-edge/openapi.yaml —
-        // a path relative to the PROCESS WORKING DIRECTORY, and the contract is not packaged into the
-        // artifact (verified: the jar contains no openapi.yaml). ConsoleController therefore falls to
-        // notFound() in every environment where the process is not started from the repository root.
+        // billing.console.contract-location now defaults to classpath:contracts/billing-edge/openapi.yaml
+        // and the contract is packaged into the artifact, so ConsoleController resolves it and serves
+        // the browsable document. CON-001-a's intent — the API's own published contract is returned as
+        // browsable documentation — now holds.
         assertThat(response.getStatusCode().value())
-                .as("CON-001-a asserts the API's own published contract is returned as browsable "
-                        + "documentation. It is not: the resource does not resolve.")
-                .isEqualTo(404);
-        assertThat(response.getBody()).isEqualTo("{\"message\":\"Resource not found\"}");
+                .as("CON-001-a asserts the published contract is served as browsable documentation")
+                .isEqualTo(200);
+        assertThat(response.getBody()).contains("openapi");
     }
 
     @Test // CON-001-b
@@ -438,43 +454,41 @@ class S5BootedEdgeIT {
     }
 
     // -------------------------------------------------------------------------------------------
-    // ADM-004-c — the externally visible base path. DEF-0111 lives here.
+    // ADM-004-c — the externally visible base path. DEF-0111 fixed.
     // -------------------------------------------------------------------------------------------
 
-    @Test // ADM-004-c — DEF-0111
-    @DisplayName("ADM-004-c: billing.api.base-path is validated, logged, and applied to nothing (DEF-0111)")
-    void theConfiguredBasePathIsNeverApplied() {
-        // application-local.yaml sets billing.api.base-path: /sapi-billing/v1, reproducing the legacy
-        // local listener path. StartupConfigurationValidator requires it and prints it. Nothing binds
-        // it to server.servlet.context-path or to any mapping, so the service serves at the root in
-        // every profile and the configured value is inert.
+    @Test // ADM-004-c — DEF-0111 fixed
+    @DisplayName("ADM-004-c: billing.api.base-path resolves to the configured base path (DEF-0111 fixed)")
+    void theConfiguredBasePathIsApplied() {
+        // application-local.yaml sets billing.api.base-path: /sapi-billing/v1, the legacy local listener
+        // path. BasePathFilter now strips it before routing, so /sapi-billing/v1/info routes to the same
+        // controller as /info. The root continues to resolve too (the alias form of "apply it to the
+        // mappings"), so every acceptance criterion that addresses the root still passes.
         assertThat(get("/info", bearer(S5TestSupport.VALID)).getStatusCode().value())
-                .as("served at the root even though the profile declares /sapi-billing/v1")
+                .as("the root continues to resolve (alias form)")
                 .isEqualTo(200);
         assertThat(get("/sapi-billing/v1/info", bearer(S5TestSupport.VALID)).getStatusCode().value())
-                .as("ADM-004-c asserts the externally visible base path RESOLVES to the deployment's "
-                        + "value. It does not resolve to anything: the declared path is not served.")
-                .isEqualTo(404);
+                .as("ADM-004-c asserts the externally visible base path RESOLVES to the deployment's value")
+                .isEqualTo(200);
     }
 
     // -------------------------------------------------------------------------------------------
-    // Operational surface. DEF-0104 lives here.
+    // Operational surface. DEF-0104 fixed.
     // -------------------------------------------------------------------------------------------
 
-    @Test // DEF-0104
-    @DisplayName("the actuator health probes named by kustomize/base/deployment.yaml answer 404 (DEF-0104)")
-    void actuatorHealthProbesAreSwallowedByTheAdmissionFilter() {
+    @Test // DEF-0104 fixed
+    @DisplayName("the actuator health probes named by kustomize/base/deployment.yaml answer 200 (DEF-0104 fixed)")
+    void actuatorHealthProbesAreServedByTheActuator() {
         // kustomize/base/deployment.yaml declares readinessProbe and livenessProbe against
-        // /actuator/health/readiness and /actuator/health/liveness on port 8081. InboundValidationFilter
-        // rejects every path absent from ApiResourceTable with the routing 404 before the dispatcher
-        // ever sees it, so both probes fail permanently and the pod never becomes ready.
+        // /actuator/health/readiness and /actuator/health/liveness. InboundValidationFilter now bypasses
+        // /actuator/**, the probes are enabled (application.yaml), and only health is exposed on the
+        // main listener. The probes answer 200, so the pod can become ready.
         for (String probe : List.of("/actuator/health/readiness", "/actuator/health/liveness",
                 "/actuator/health")) {
             ResponseEntity<String> response = get(probe, new HttpHeaders());
             assertThat(response.getStatusCode().value())
                     .as("%s is the probe path the deployment manifest uses", probe)
-                    .isEqualTo(404);
-            assertThat(response.getBody()).isEqualTo("{\"message\":\"Resource not found\"}");
+                    .isEqualTo(200);
         }
     }
 }

@@ -3,6 +3,7 @@ package com.westfield.api.billing.edge.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.westfield.api.billing.edge.adapter.in.web.AgencyEntitlementFilter;
 import com.westfield.api.billing.edge.adapter.in.web.AuditFunnelFilter;
+import com.westfield.api.billing.edge.adapter.in.web.BasePathFilter;
 import com.westfield.api.billing.edge.adapter.in.web.CallerContextFactory;
 import com.westfield.api.billing.edge.adapter.in.web.ContractViolationWriter;
 import com.westfield.api.billing.edge.adapter.in.web.CorrelationIdFilter;
@@ -24,8 +25,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 /**
  * The assembly: which filters exist, and — the part that carries behaviour — <b>in what order</b>.
@@ -62,6 +61,11 @@ public class BillingEdgeConfiguration {
 
     /** Outermost. Everything downstream can rely on a correlation id existing. */
     public static final int CORRELATION_ID_FILTER_ORDER = -120;
+    /**
+     * DEF-0111: outermost-1, before the correlation id filter, so the base path is stripped before
+     * console detection and every downstream consumer sees the stripped path.
+     */
+    public static final int BASE_PATH_FILTER_ORDER = -130;
     /** After Spring Security (-100): the audit record projects decoded token claims. */
     public static final int AUDIT_FUNNEL_FILTER_ORDER = 0;
     /** Inside the funnel: a contract violation is audited like any other outcome. */
@@ -92,17 +96,23 @@ public class BillingEdgeConfiguration {
     /**
      * ADR-0037. The exemption list is read here and nowhere else; {@link StartupConfigurationValidator}
      * has already refused to start if any entry lacks an owner or an expiry.
+     *
+     * <p>DEF-0108: the owner AND expiry are threaded through to the rule, not projected down to client
+     * ids. The rule denies an exemption whose expiry has passed (boundary-inclusive), so a
+     * cross-agency PII grant closes on its recorded date instead of lasting forever.
      */
     @Bean
-    public AgencyEntitlementRule agencyEntitlementRule(BillingEdgeProperties properties) {
-        Set<String> exempt = new LinkedHashSet<>();
+    public AgencyEntitlementRule agencyEntitlementRule(BillingEdgeProperties properties, Clock clock) {
+        java.util.List<com.westfield.api.billing.edge.domain.security.ExemptClient> exempt =
+                new java.util.ArrayList<>();
         for (BillingEdgeProperties.Security.ExemptClient client
                 : properties.getSecurity().getAgencyEntitlementExemptClients()) {
             if (client.getClientId() != null) {
-                exempt.add(client.getClientId());
+                exempt.add(new com.westfield.api.billing.edge.domain.security.ExemptClient(
+                        client.getClientId(), client.getOwner(), client.getExpires()));
             }
         }
-        return new AgencyEntitlementRule(exempt);
+        return new AgencyEntitlementRule(exempt, clock);
     }
 
     @Bean
@@ -130,6 +140,18 @@ public class BillingEdgeConfiguration {
         FilterRegistrationBean<CorrelationIdFilter> registration =
                 new FilterRegistrationBean<>(new CorrelationIdFilter(properties));
         registration.setOrder(CORRELATION_ID_FILTER_ORDER);
+        return registration;
+    }
+
+    /**
+     * DEF-0111 (ADM-004-c): apply {@code billing.api.base-path} so the configured base path resolves.
+     * Registered outermost-1 so the base path is stripped before the correlation id filter.
+     */
+    @Bean
+    public FilterRegistrationBean<BasePathFilter> basePathFilter(BillingEdgeProperties properties) {
+        FilterRegistrationBean<BasePathFilter> registration =
+                new FilterRegistrationBean<>(new BasePathFilter(properties));
+        registration.setOrder(BASE_PATH_FILTER_ORDER);
         return registration;
     }
 

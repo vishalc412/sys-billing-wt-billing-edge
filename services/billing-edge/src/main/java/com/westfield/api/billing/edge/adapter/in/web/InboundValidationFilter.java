@@ -57,6 +57,15 @@ public class InboundValidationFilter extends OncePerRequestFilter {
             chain.doFilter(request, response);
             return;
         }
+        if (isActuator(request)) {
+            // DEF-0104: the actuator health probes (k8s readiness/liveness) are not part of the API
+            // surface declared in ApiResourceTable, so the admission funnel would 404 them before the
+            // dispatcher ever saw them and the pod would never become ready. Route them outside the
+            // contract admission rule. Only health is exposed on the main listener (application.yaml);
+            // the sensitive actuator endpoints stay unexposed, so this is not a new API surface.
+            chain.doFilter(request, response);
+            return;
+        }
         Optional<ContractViolation> violation = admissionRule.admit(
                 request.getMethod(),
                 request.getRequestURI(),
@@ -79,5 +88,11 @@ public class InboundValidationFilter extends OncePerRequestFilter {
             parameters.put(name, supplied);
         });
         return parameters;
+    }
+
+    /** DEF-0104: the actuator management surface sits outside the API contract. */
+    private static boolean isActuator(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path != null && (path.equals("/actuator") || path.startsWith("/actuator/"));
     }
 }

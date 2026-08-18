@@ -32,7 +32,6 @@ import static org.assertj.core.api.Assertions.assertThat;
         classes = {com.westfield.api.billing.edge.SysBillingApplication.class, S5TestSupport.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
-                "spring.main.allow-bean-definition-overriding=true",
                 // The values application-prod.yaml expects from the deployment. Supplied directly
                 // rather than through the environment-variable names, because those names do not
                 // match what the deployment manifests actually set — see S5DeploymentManifestTest.
@@ -41,8 +40,13 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "billing.backend.sts.host=https://sso.westfieldgrp.com/sts",
                 "billing.backend.vault.host=https://vault.westfieldgrp.com",
                 "billing.saml.audience=urn:sts:mulesoft:unt:to:saml:prod",
-                "billing.truststore.location=file:/etc/sys-billing/truststore/truststore.jks",
-                "billing.truststore.password=a-per-environment-password",
+                // DEF-0105: the outbound adapters load the truststore at construction. A classpath
+                // test keystore keeps the prod-profile boot green without standing up a file at
+                // /etc/sys-billing/truststore/truststore.jks. The location is supplied directly, not
+                // through BILLING_TRUSTSTORE_LOCATION, to match how this test supplies the rest of the
+                // prod profile's required values.
+                "billing.truststore.location=classpath:truststore/local.jks",
+                "billing.truststore.password=local-development-only",
                 "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://sso.westfieldgrp.com"
         })
 @ActiveProfiles("prod")
@@ -109,10 +113,14 @@ class S5ProdProfileIT {
         assertThat(properties.getSecurity().getAgencyEntitlementExemptClients()).isEmpty();
     }
 
-    @Test // DEF-0104 under prod
-    @DisplayName("DEF-0104: the actuator probes are 404 under the production profile too")
-    void actuatorProbesAre404InProductionAsWell() {
-        assertThat(get("/actuator/health/readiness").getStatusCode().value()).isEqualTo(404);
-        assertThat(get("/actuator/health/liveness").getStatusCode().value()).isEqualTo(404);
+    @Test // DEF-0104 fixed under prod
+    @DisplayName("DEF-0104: the actuator health probes answer 200 under the production profile too")
+    void actuatorProbesAreServedInProductionAsWell() {
+        // Only health is exposed on the main listener (application.yaml: exposure.include=health); the
+        // sensitive actuator endpoints stay unexposed. The k8s readiness/liveness probes answer 200 so
+        // the pod can become ready, with no new API surface beyond health.
+        assertThat(get("/actuator/health/readiness").getStatusCode().value()).isEqualTo(200);
+        assertThat(get("/actuator/health/liveness").getStatusCode().value()).isEqualTo(200);
+        assertThat(get("/actuator/health").getStatusCode().value()).isEqualTo(200);
     }
 }

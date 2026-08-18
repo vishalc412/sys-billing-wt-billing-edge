@@ -10,9 +10,9 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: test
-            - name: PRIMARY_ACCOUNT_HOST
-              value: dev5esb.westfieldgrp.corp
-            - name: EXTERNAL_PRIMARY_ACCOUNT_HOST
-              value: wassvcu.westfieldgrp.corp
-            - name: PING_FED_HOST
-              value: idpa1-test.westfieldgrp.corp
+            - name: BILLING_ESB_HOST
+              value: http://dev5esb.westfieldgrp.corp
+            - name: BILLING_WAS_HOST
+              value: http://wassvcu.westfieldgrp.corp
+            - name: BILLING_STS_HOST
+              value: https://idpa1-test.westfieldgrp.corp

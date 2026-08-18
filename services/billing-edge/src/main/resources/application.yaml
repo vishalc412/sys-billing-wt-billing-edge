@@ -11,6 +11,19 @@ spring:
 server:
   port: 8081
 
+# DEF-0104: the k8s readiness/liveness probes hit /actuator/health/** on the main listener. Only
+# health is exposed (the sensitive actuator endpoints stay unexposed), and the probes are enabled
+# explicitly so they are present outside a k8s-detected platform too (e.g. a SpringBootTest).
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+
 billing:
   security:
     # ADR-0037. enforce | log-only. log-only carries a KNOWN cross-agency customer-PII exposure and

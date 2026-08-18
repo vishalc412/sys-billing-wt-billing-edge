@@ -11,9 +11,9 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
-            - name: PRIMARY_ACCOUNT_HOST
-              value: esb.westfieldgrp.corp
-            - name: EXTERNAL_PRIMARY_ACCOUNT_HOST
-              value: wassvc.westfieldgrp.corp
-            - name: PING_FED_HOST
-              value: sso.westfieldgrp.corp
+            - name: BILLING_ESB_HOST
+              value: https://esb.westfieldgrp.corp
+            - name: BILLING_WAS_HOST
+              value: https://wassvc.westfieldgrp.corp
+            - name: BILLING_STS_HOST
+              value: https://sso.westfieldgrp.corp

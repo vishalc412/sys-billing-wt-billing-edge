@@ -5,70 +5,74 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.WebApplicationType;
-import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * DEF-0100 — the deployable does not start.
+ * DEF-0100 — the deployable now starts.
  *
- * <p>No test in the S4 suite boots a Spring application context. Every one of the 206 tests the build
- * report counts is a plain JUnit test over a hand-constructed object or a hand-assembled filter chain.
- * The consequence is that the assembly itself — which beans exist, whether they can be constructed,
- * whether the filters are registered — has never been executed, and the build is green anyway.
+ * <p>Previously {@code ThycoticCredentialProvider} and {@code WsTrustSecurityTokenService} were each
+ * annotated {@code @Component} and declared two constructors with no {@code @Autowired}, so Spring's
+ * implicit constructor injection could not choose and the context died before anything else could be
+ * observed. The production constructors are now marked {@code @Autowired}; the context boots unaided
+ * and the {@code S5TestSupport} bean-overriding work-around has been removed.
  *
- * <p>This test starts the real {@link SysBillingApplication} with a valid profile and records what
- * happens. It asserts the FAILURE, deliberately: an S5 test that asserted success and went red would
- * be indistinguishable from a flaky test, while a test that asserts the observed failure is a
- * reproduction that survives until someone fixes the cause.
- *
- * <p>Root cause: {@code ThycoticCredentialProvider} and {@code WsTrustSecurityTokenService} are each
- * annotated {@code @Component} and each declare TWO constructors — a public production one and a
- * package-private test seam taking an injected {@code HttpClient}. Spring's implicit constructor
- * injection only applies when a component declares exactly one constructor; with two and no
- * {@code @Autowired} marker it falls back to the no-argument constructor, which does not exist.
+ * <p>This test boots the real {@link SysBillingApplication} with the local profile in a MOCK servlet
+ * web context (no real socket) and asserts the boot SUCCEEDS. {@code S5TestSupport} is pulled in only
+ * for its stub {@code JwtDecoder} — every profile configures {@code issuer-uri}, so without the stub
+ * the context would attempt OIDC discovery against an unreachable IdP at bean creation. That is a
+ * test-environment substitution, not a DEF-0100 work-around. A MOCK web context (not NONE) is required
+ * because {@code SecurityConfiguration#securityFilterChain} injects {@code HttpSecurity}, which the
+ * web-security auto-configuration only provides when a servlet web application context is present.
  */
+@SpringBootTest(
+        classes = {SysBillingApplication.class, S5TestSupport.class},
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        properties = "spring.main.banner-mode=off")
+@org.springframework.test.context.ActiveProfiles("local")
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-@DisplayName("S5 — DEF-0100: the Spring context does not start")
+@DisplayName("S5 — DEF-0100: the Spring context starts")
 class S5ContextStartupTest {
 
-    @Test // DEF-0100
-    @DisplayName("booting SysBillingApplication with the local profile fails on thycoticCredentialProvider")
-    void theApplicationContextFailsToStart() {
-        SpringApplicationBuilder builder = new SpringApplicationBuilder(SysBillingApplication.class)
-                .web(WebApplicationType.NONE)
-                .profiles("local")
-                .properties("spring.main.banner-mode=off");
+    @Autowired
+    ConfigurableApplicationContext context;
 
-        assertThatThrownBy(() -> {
-            try (ConfigurableApplicationContext ignored = builder.run()) {
-                // unreachable while DEF-0100 stands
-            }
-        })
-                .hasMessageContaining("thycoticCredentialProvider")
-                .hasStackTraceContaining("No default constructor found");
+    @Test // DEF-0100
+    @DisplayName("booting SysBillingApplication with the local profile starts the context")
+    void theApplicationContextStartsSuccessfully() {
+        assertThat(context.isActive())
+                .as("the context starts once the @Component adapters are constructor-injectable")
+                .isTrue();
+        // The two adapters that previously failed Spring instantiation are now present as beans.
+        assertThat(context.containsBean("thycoticCredentialProvider")).isTrue();
+        assertThat(context.containsBean("wsTrustSecurityTokenService")).isTrue();
     }
 
-    @Test // DEF-0100 — the second occurrence of the same fault
-    @DisplayName("the same two-constructor fault is present on WsTrustSecurityTokenService")
-    void theSameFaultIsPresentOnTheStsAdapter() {
-        // Asserted structurally rather than by boot order, because the container stops at the first
-        // failure and would never reach the second bean.
-        assertThat(com.westfield.api.billing.edge.adapter.out.sts.WsTrustSecurityTokenService.class
-                .getDeclaredConstructors())
-                .as("a @Component with two constructors and no @Autowired cannot be instantiated by Spring")
+    @Test // DEF-0100 — the second occurrence of the same fault, now corrected
+    @DisplayName("each @Component adapter has @Autowired on its production constructor")
+    void theSameFaultIsCorrectedOnBothAdapters() {
+        assertProductionConstructorAutowired(
+                com.westfield.api.billing.edge.adapter.out.sts.WsTrustSecurityTokenService.class);
+        assertProductionConstructorAutowired(
+                com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProvider.class);
+    }
+
+    private static void assertProductionConstructorAutowired(Class<?> component) {
+        Constructor<?>[] constructors = component.getDeclaredConstructors();
+        assertThat(constructors)
+                .as("%s declares the test seam and the production constructor", component.getSimpleName())
                 .hasSize(2);
-        assertThat(com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProvider.class
-                .getDeclaredConstructors())
-                .hasSize(2);
-        assertThat(java.util.Arrays.stream(
-                        com.westfield.api.billing.edge.adapter.out.sts.WsTrustSecurityTokenService.class
-                                .getDeclaredConstructors())
-                .anyMatch(c -> c.isAnnotationPresent(org.springframework.beans.factory.annotation.Autowired.class)))
-                .as("neither constructor is marked @Autowired, so Spring cannot choose")
-                .isFalse();
+        long autowired = Arrays.stream(constructors)
+                .filter(c -> c.isAnnotationPresent(org.springframework.beans.factory.annotation.Autowired.class))
+                .count();
+        assertThat(autowired)
+                .as("exactly one constructor is @Autowired so Spring can choose the production one")
+                .isEqualTo(1);
     }
 }
