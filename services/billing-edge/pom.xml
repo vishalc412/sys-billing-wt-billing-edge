@@ -136,6 +136,34 @@
           </execution>
         </executions>
       </plugin>
+      <!--
+        Wire maven-failsafe-plugin so the S5 *IT integration test classes
+        (S5BootedEdgeIT, S5ProdProfileIT, S5AuditFunnelIT) actually execute.
+        Surefire's default pattern excludes *IT classes, so without this binding the
+        six defect fixes asserted only at the IT layer (DEF-0101, DEF-0102, DEF-0103,
+        DEF-0104, DEF-0106, DEF-0111) were never run. Failsafe's default includes
+        (*IT.java) match those classes, so no explicit pattern is required. The plugin
+        version is managed by spring-boot-starter-parent's pluginManagement, consistent
+        with the rest of the build.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>integration-test</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>verify</id>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>
