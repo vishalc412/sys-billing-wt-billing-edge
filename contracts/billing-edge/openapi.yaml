@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: sys-billing — billing-edge
-  version: "1.0.0"
+  version: "2.0.0"
   description: |
     The admission surface and the two endpoints the edge module serves itself: `/info` (CAP-013) and
     the API documentation console (CAP-014). It also defines the **canonical** security scheme,
@@ -10,6 +10,20 @@ info:
     source of truth.
 
     **FROZEN at S3 (scaffold-v1). Read-only at S4.**
+
+    **Re-versioned to 2.0.0 on 2026-08-19 (S6, DEF-0102).** A response-code addition is a breaking
+    change to the contract surface: `getBuildInfo` now declares `400` for the absent/malformed
+    required-Authorization-header contract violation, distinct from `401` for a present-but-rejected
+    token. The wire behaviour is unchanged — the legacy (and the target impl, ADM-003-a) already
+    answered 400 for a missing required header; only the contract under-declared it. **Migration
+    path:** consumers that exhaustively switch on HTTP status must handle `400` on `/info` (and on
+    every secured operation that requires the Authorization header) for an absent or malformed
+    Authorization header, separate from `401`. No impl change; the S5 parity test
+    `S5BootedEdgeIT#infoWithoutAuthorizationIsRejectedWith400NotThe401TheContractDeclares` already
+    asserts the 400 and is now contract-conformant. `getBuildInfo` is served by billing-edge only;
+    the shared `BadRequest` response component added here is the canonical definition the other
+    modules may reference, but no re-dispatch of billing-agency or billing-account contracts follows
+    from this change. The previous version (1.0.0) is superseded; do not re-use it.
 
     Behaviours defined here and enforced for every request, regardless of which module answers it:
     every request passes one funnel — build the audit record, log entry, route, log exit, log the
@@ -60,6 +74,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/BuildInfo' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorised' }
         '500': { $ref: '#/components/responses/UnhandledFailure' }
 
@@ -121,9 +136,34 @@ components:
       schema: { type: string }
 
   responses:
+    BadRequest:
+      description: |
+        A contract violation the resource server rejected before authentication: an **absent or
+        malformed required header**. The `Authorization` header is `required: true` on every secured
+        operation (legacy RAML `secured` trait — `secured_bearer.raml`, `headers.Authorization.required: true`;
+        ADM-003-a), so APIkit answers `400` with the one-field `{"message":"Bad request"}` body before
+        any token-enforcement policy runs. This is **distinct from `401 Unauthorised`**, which is a
+        **present-but-rejected** token (ADR-0013). Preserved legacy behaviour (ADM-003-a); declared
+        on the contract in the 2026-08-19 S6 re-version (DEF-0102) — the wire behaviour is unchanged,
+        only the declaration was missing.
+
+        Crib grounding (sapi-billing archive): the `/info` RAML route applies `is: [secured]`
+        (`route:GET /info@src/main/resources/api/sapi-billing-search.raml#L20`); the secured trait
+        declares the header required (`file:src/main/resources/api/exchange_modules/.../secured_bearer.raml`,
+        `Authorization.required: true`); the `/info` flow
+        (`sym:src/main/mule/sapi-billing-search.xml#get:\info:sapi-billing-search-config@L251`) has no
+        flow-level error handler, so the required-header violation is answered by APIkit's default
+        400 — not by a 401 from the token policy.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/MessageOnlyError' }
+          example: { message: "Bad request" }
     Unauthorised:
       description: |
-        No token, or a token the service rejected (ADR-0013). Divergence: the legacy response was
+        A **present-but-rejected** token (ADR-0013) — a token that failed validation (no token, when
+        "no token" means the header was present but empty/malformed beyond a missing-header
+        contract violation, or a token the service rejected). For an **absent** Authorization
+        header, see `400 BadRequest` (ADM-003-a; DEF-0102). Divergence: the legacy 401 response was
         produced by API Manager and its shape is unknown (R-003).
       content:
         application/problem+json:
