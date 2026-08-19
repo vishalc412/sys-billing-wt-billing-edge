@@ -1,12 +1,12 @@
 # ADR-0037: CORRECT — the service enforces agency entitlement on the worklist endpoints
 
-Status:   Accepted (pending human approval at the S3 gate)
+Status:   Accepted (pending human approval) — app-layer non-enforcement is now evidenced; the open question is solely whether the API Manager gateway (R-003, policy set not supplied) already enforces agency entitlement.
 Date:     2026-08-14
 Deciders: migration-architect, **[human approver — this ADR requires a named human owner]**
 Supersedes: —
 Candidate: `out/adr-candidates/ADR-CANDIDATE-0037-defect-no-agency-entitlement-check.md`
 Disposition: **correct (deliberate divergence) — the highest-consequence decision in this set**
-Assumption-based: **yes — R-003 (the API Manager policy set) is unresolved and could not be obtained.**
+Assumption-based: **partially — app-layer non-enforcement is now evidenced (S1 re-excavation, 2026-08-19); only the R-003 gateway question remains unresolved.**
 
 ## Context
 
@@ -25,6 +25,40 @@ Whether an API Manager policy enforces the check **cannot be determined**: the p
 exported (R-003), it was raised as a blocking item for S3, and it has not been supplied. The token
 demonstrably carries the `agencyCodes` claim and the application deliberately captures it, which
 suggests someone intended an entitlement model and never built it.
+
+## Evidence (S1 re-excavation, 2026-08-19)
+
+The mule-archaeologist re-excavated the user-supplied source to ground this ADR's highest-consequence
+claim. The findings below convert the app-layer portion of the rationale from assumption to evidence.
+They do **not** close R-003; the gateway question remains open.
+
+- **`global.xml:20`** — `api-gateway:autodiscovery apiId="16888213"` binds the application to an API
+  Manager instance. Inbound policy enforcement (including any agency-entitlement check) is a platform
+  policy configured in API Manager, **not in application source**. R-003 is that policy set, and it was
+  never supplied. This is why enforcement at the gateway cannot be confirmed or ruled out from the
+  application archive alone.
+- **`responseLogFlow.xml:24` (knowledge-map node N-0035)** — `agencyCodes` is read from
+  `authentication.properties.userProperties.agencyCodes` with `default []` and copied into the
+  `requestResponseLog` audit record. It is **never compared** to the `{agencyCode}` path parameter and
+  **never gates** a request. The claim is audit-only.
+- **`sapi-billing-search.raml`** — every resource applies the `secured` trait (bearer `Authorization`
+  header) but declares **no `securedBy:` scheme** for agency entitlement. `/pastDueToday/{agencyCode}`
+  and `/pendingCancelToday/{agencyCode}` accept **any agency code from the path** with no check. There
+  is no entitlement scheme in the API contract.
+- **N-0021 (`authentication.properties`, ADR-0013)** — the application only **reads** claims
+  (`act` / `actSub` / `actEmail` / `agencyCodes` / `clientId`); it implements **no authentication and no
+  authorization itself**. Auth is gateway-owned (ADR-0013); the app is a claim consumer.
+
+**Verdict.** The source **supports** the claim that agency-entitlement enforcement is **new behaviour
+the legacy does not have at the app layer**: the `agencyCodes` claim is captured for audit and never
+compared, the RAML declares no entitlement scheme, and the app owns no auth. The source **leaves open**
+whether the API Manager gateway already enforces it (R-003 not supplied — cannot be confirmed from
+source). Therefore ADR-0037's deny-on-absent/empty-claim rule is an **addition, not a preservation**,
+and the in-service enforcement (billing-agency rejects on its own worklist endpoints; billing-edge MAY
+enforce as defense-in-depth) is **new behaviour, not a parity regression**. This grounding strengthens
+the rationale; it does **not** change the Decision, the exemption-list mechanics, or the DEF-0106
+comparison rule (normalise both sides trim + uppercase Locale.ROOT, exact match, malformed claim
+fail-closed, deny-on-empty/absent).
 
 ## Decision
 
