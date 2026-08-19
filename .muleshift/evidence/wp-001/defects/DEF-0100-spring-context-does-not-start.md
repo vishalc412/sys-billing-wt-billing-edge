@@ -22,16 +22,16 @@ reproduction: >
   including S5TestSupport with spring.main.allow-bean-definition-overriding=true, which is the
   documented DEF-0100 work-around and is not present in the production artifact.
 evidence:
-  - "test:com.westfield.api.billing.edge.s5.S5ContextStartupTest#theApplicationContextFailsToStart"
-  - "test:com.westfield.api.billing.edge.s5.S5ContextStartupTest#theSameFaultIsPresentOnTheStsAdapter"
-  - "evidence:run-s5-billing-edge-8f2eec88"
-  - "commit:8f2eec88b614f310a455f6e17b6c09d80f1205f4"
+  - "test:com.westfield.api.billing.edge.s5.S5ContextStartupTest#theApplicationContextStartsSuccessfully"
+  - "test:com.westfield.api.billing.edge.s5.S5ContextStartupTest#theSameFaultIsCorrectedOnBothAdapters"
+  - "evidence:run-s5-billing-edge-r2-e7876edf"
+  - "commit:e7876edf4194a32042d19d11a5abdce4447aad3e"
 traces_to:
   - "mule:flow/sapi-billing-search-main"
-  - "test:com.westfield.api.billing.edge.s5.S5ContextStartupTest#theApplicationContextFailsToStart"
-  - "evidence:run-s5-billing-edge-8f2eec88"
-status: open
-blocks_gate: true
+  - "test:com.westfield.api.billing.edge.s5.S5ContextStartupTest#theApplicationContextStartsSuccessfully"
+  - "evidence:run-s5-billing-edge-r2-e7876edf"
+status: resolved
+blocks_gate: false
 triage:
   round: 2
   disposition: >
@@ -42,6 +42,8 @@ triage:
     a factory/test-config). No ADR or contract is implicated; this is pure assembly wiring that the
     S4 suite's no-context test strategy allowed through. Autonomously fixable by a java-engineer
     re-dispatch. Note: this is Round 2 of a bounded-three-round loop for the WP-001 edge defect set.
+
+    **Resolution (S5 round-2):** Fix verified green in S5 round-2 (run-s5-billing-edge-r2-e7876edf, commit e7876edf4194a32042d19d11a5abdce4447aad3e) by S5ContextStartupTest#theApplicationContextStartsSuccessfully + #theSameFaultIsCorrectedOnBothAdapters (surefire, 2 tests, 0 failures). Status advanced open→resolved by migration-architect S6 reconciliation. Not closed: closure is the S7/human gate's call.
   action: >
     Re-dispatch to java-service-engineer (billing-edge): annotate the production constructor of
     ThycoticCredentialProvider and WsTrustSecurityTokenService with @Autowired (or collapse to a
@@ -100,8 +102,8 @@ Spring's implicit constructor resolution.
 ## Disposition
 
 Class: **implementation**. Re-dispatch to the billing-edge java-service-engineer. Round 2 of the
-bounded loop for this defect set. Status remains **open** — S6 triages and dispositions; it does
-not close.
+bounded loop for this defect set. **Status: resolved** — fix verified green in S5 round-2
+(run-s5-billing-edge-r2-e7876edf); closure is the S7/human gate's call, not S6's.
 
 ## Trace chain
 

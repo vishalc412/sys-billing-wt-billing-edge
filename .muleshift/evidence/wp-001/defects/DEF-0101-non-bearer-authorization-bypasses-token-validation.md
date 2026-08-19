@@ -21,16 +21,17 @@ reproduction: >
   unauthenticated". The invalid-bearer path (Authorization: Bearer <invalid>) correctly returns 401;
   only the non-bearer / no-scheme shape bypasses.
 evidence:
-  - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#nonBearerAuthorizationHeaderBypassesTokenValidationEntirely"
-  - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#garbageAuthorizationValueAlsoReachesTheImplementation"
-  - "evidence:run-s5-billing-edge-8f2eec88"
+  - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#nonBearerAuthorizationHeaderIsRejectedWith401"
+  - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#garbageAuthorizationValueIsRejectedWith401"
+  - "evidence:run-s5-billing-edge-r2-e7876edf"
+  - "commit:e7876edf4194a32042d19d11a5abdce4447aad3e"
   - "adr:ADR-0013"
 traces_to:
   - "km:node/N-0004"
-  - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#nonBearerAuthorizationHeaderBypassesTokenValidationEntirely"
-  - "evidence:run-s5-billing-edge-8f2eec88"
-status: open
-blocks_gate: true
+  - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#nonBearerAuthorizationHeaderIsRejectedWith401"
+  - "evidence:run-s5-billing-edge-r2-e7876edf"
+status: resolved
+blocks_gate: false
 triage:
   round: 2
   disposition: >
@@ -41,6 +42,8 @@ triage:
     into the service to close; the bearer-filter gate must reject any Authorization value that is not
     a Bearer token (or admit only Bearer and require validation) before the implementation runs.
     Autonomously fixable by a java-engineer re-dispatch. Round 2 of the bounded loop.
+
+    **Resolution (S5 round-2):** Fix verified green in S5 round-2 (run-s5-billing-edge-r2-e7876edf, commit e7876edf4194a32042d19d11a5abdce4447aad3e) by S5BootedEdgeIT#nonBearerAuthorizationHeaderIsRejectedWith401 + #garbageAuthorizationValueIsRejectedWith401 (failsafe, 401 on the wire; suite 32 tests, 0 failures). The round-2 fix renamed both tests from the 200-bypass assertion to the 401-rejection assertion. Status advanced open→resolved by migration-architect S6 reconciliation. Not closed: closure is the S7/human gate's call.
   action: >
     Re-dispatch to java-service-engineer (billing-edge): in the inbound security/admission path,
     reject any Authorization header whose scheme is not Bearer with 401 (or treat a non-Bearer
@@ -99,7 +102,8 @@ requires the non-bearer shape to be rejected; the impl lets it through.
 ## Disposition
 
 Class: **implementation**. Re-dispatch to the billing-edge java-service-engineer. Round 2 of the
-bounded loop. Status remains **open**.
+bounded loop. **Status: resolved** — fix verified green in S5 round-2 (run-s5-billing-edge-r2-e7876edf);
+closure is the S7/human gate's call, not S6's.
 
 ## Trace chain
 

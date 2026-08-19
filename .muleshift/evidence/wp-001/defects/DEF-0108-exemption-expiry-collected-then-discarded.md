@@ -23,15 +23,18 @@ reproduction: >
   after the exemption's expiry. The S5 test asserts this EXEMPT and names DEF-0108 in its
   @DisplayName: "DEF-0108: an exemption that expired years ago still grants access".
 evidence:
-  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#anExpiredExemptionStillGrantsAccess"
-  - "evidence:run-s5-billing-edge-8f2eec88"
+  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#anExpiredExemptionIsDenied"
+  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#anExemptionExpiringTodayIsStillLive"
+  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#aLiveExemptionStillGrantsAccess"
+  - "evidence:run-s5-billing-edge-r2-e7876edf"
+  - "commit:e7876edf4194a32042d19d11a5abdce4447aad3e"
   - "adr:ADR-0037"
 traces_to:
   - "km:node/N-0035"
-  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#anExpiredExemptionStillGrantsAccess"
-  - "evidence:run-s5-billing-edge-8f2eec88"
-status: open
-blocks_gate: true
+  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#anExpiredExemptionIsDenied"
+  - "evidence:run-s5-billing-edge-r2-e7876edf"
+status: resolved
+blocks_gate: false
 triage:
   round: 2
   disposition: >
@@ -44,6 +47,8 @@ triage:
     semantics are normative regardless of the enforcement-mode (enforce vs log-only) human decision,
     so DEF-0108 does NOT ride the ADR-0037 assumption-based human gate the way DEF-0402/DEF-0403 do.
     Autonomously fixable by a java-engineer re-dispatch. Round 2 of the bounded loop.
+
+    **Resolution (S5 round-2):** Fix verified green in S5 round-2 (run-s5-billing-edge-r2-e7876edf, commit e7876edf4194a32042d19d11a5abdce4447aad3e) by S5ProvenanceAndExemptionProbeTest#anExpiredExemptionIsDenied + #anExemptionExpiringTodayIsStillLive + #aLiveExemptionStillGrantsAccess (surefire, 9 tests, 0 failures; boundary-inclusive — an exemption dated today is still live, a past-dated one is denied). Status advanced open→resolved by migration-architect S6 reconciliation. Not closed: closure is the S7/human gate's call.
   action: >
     Re-dispatch to java-service-engineer (billing-edge): thread the expiry (and owner) through to
     AgencyEntitlementRule so an exempt client is only EXEMPT while its exemption is live on the
@@ -104,7 +109,8 @@ boundary; the rule must consult it.
 Class: **implementation**. The expiry-deny semantics are normative in the amended ADR independent of
 the enforcement-mode human decision, so this defect is autonomously fixable (re-dispatch to
 java-engineer) and does **not** ride the ADR-0037 assumption-based human gate. Round 2 of the
-bounded loop. Status remains **open**.
+bounded loop. **Status: resolved** — fix verified green in S5 round-2 (run-s5-billing-edge-r2-e7876edf);
+closure is the S7/human gate's call, not S6's.
 
 ## Trace chain
 

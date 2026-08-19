@@ -23,16 +23,18 @@ reproduction: >
   DEF-0105 in the @DisplayName: "the Thycotic client uses the JVM DEFAULT SSLContext, not
   billing.truststore.location".
 evidence:
-  - "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#theVaultClientIgnoresTheConfiguredTruststore"
-  - "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#theStsClientIgnoresTheConfiguredTruststore"
-  - "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#noProductionClassEverLoadsTheTruststore"
-  - "evidence:run-s5-billing-edge-8f2eec88"
+  - "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#theVaultClientUsesTheConfiguredTruststore"
+  - "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#theStsClientUsesTheConfiguredTruststore"
+  - "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#aProductionClassNowLoadsTheTruststore"
+  - "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#noClientCertificateIsPresented"
+  - "evidence:run-s5-billing-edge-r2-e7876edf"
+  - "commit:e7876edf4194a32042d19d11a5abdce4447aad3e"
   - "adr:ADR-0041"
 traces_to:
   - "mule:flow/sapi-billing-search-main"
-  - "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#theVaultClientIgnoresTheConfiguredTruststore"
-  - "evidence:run-s5-billing-edge-8f2eec88"
-status: open
+  - "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#theVaultClientUsesTheConfiguredTruststore"
+  - "evidence:run-s5-billing-edge-r2-e7876edf"
+status: resolved
 blocks_gate: false
 triage:
   round: 2
@@ -46,6 +48,8 @@ triage:
     TLS-encrypted and validated against cacerts, so this is a trust-posture gap (broader trust than
     configured), not an active plaintext/auth bypass. Autonomously fixable by a java-engineer
     re-dispatch. Round 2 of the bounded loop.
+
+    **Resolution (S5 round-2):** Fix verified green in S5 round-2 (run-s5-billing-edge-r2-e7876edf, commit e7876edf4194a32042d19d11a5abdce4447aad3e) by S5OutboundTrustProbeTest#theVaultClientUsesTheConfiguredTruststore + #theStsClientUsesTheConfiguredTruststore + #aProductionClassNowLoadsTheTruststore + #noClientCertificateIsPresented (surefire, 4 tests, 0 failures; the three "ignores the configured truststore" assertions flipped to "uses the configured truststore" and a production class now loads KeyStore/SSLContext). Status advanced open→resolved by migration-architect S6 reconciliation. Not closed: closure is the S7/human gate's call.
   action: >
     Re-dispatch to java-service-engineer (billing-edge): load billing.truststore.location/.password
     into a KeyStore, build an SSLContext from it, and configure the STS and vault HttpClients with
@@ -101,7 +105,8 @@ certificate is refused"), CFG-002-f, CFG-002-g (rotation without redeploy), TOK-
 ## Disposition
 
 Class: **implementation**. Re-dispatch to the billing-edge java-service-engineer. Round 2 of the
-bounded loop. Status remains **open**.
+bounded loop. **Status: resolved** — fix verified green in S5 round-2 (run-s5-billing-edge-r2-e7876edf);
+closure is the S7/human gate's call, not S6's.
 
 ## Trace chain
 

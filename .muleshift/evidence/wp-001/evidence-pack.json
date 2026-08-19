@@ -1,0 +1,1116 @@
+{
+  "run_id": "run-s5-billing-edge-r2-e7876edf",
+  "round": 2,
+  "services": [
+    "billing-edge"
+  ],
+  "commit": "e7876edf4194a32042d19d11a5abdce4447aad3e",
+  "criteria_verdicts": [
+    {
+      "criterion": "ADM-001-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#successWithoutAnExplicitStatusIsTwoHundred"
+    },
+    {
+      "criterion": "ADM-001-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#anExplicitTwoOhFourWins"
+    },
+    {
+      "criterion": "ADM-001-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#failureWithNoDecidedStatusIsFiveHundred"
+    },
+    {
+      "criterion": "ADM-001-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#correlationIdIsEchoedOnEveryResponse"
+    },
+    {
+      "criterion": "ADM-001-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#staleStatusSurvivesADownstreamFailure"
+    },
+    {
+      "criterion": "ADM-001-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#everyJsonProducingPathStatesItsContentType"
+    },
+    {
+      "criterion": "ADM-001-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#listenerBindsAllInterfacesOverPlainHttp"
+    },
+    {
+      "criterion": "ADM-001-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#noOutboundHeaderCollectionMechanismExists"
+    },
+    {
+      "criterion": "ADM-002-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#aDeclaredMethodAndPathMatchOneResource"
+    },
+    {
+      "criterion": "ADM-002-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#billingAccountNumberMustBeTenCharacters"
+    },
+    {
+      "criterion": "ADM-002-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#policyNumberMustBeSevenCharacters"
+    },
+    {
+      "criterion": "ADM-002-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#environmentParameterIsMandatoryOnFourResources"
+    },
+    {
+      "criterion": "ADM-002-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#theEnvironmentParameterHasNoEffectOnRouting"
+    },
+    {
+      "criterion": "ADM-002-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#primaryAccountResourcesDoNotCarryTheEnvironmentTrait"
+    },
+    {
+      "criterion": "ADM-002-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#missingAuthorizationHeaderIsRejected"
+    },
+    {
+      "criterion": "ADM-002-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#declaredButUnimplementedIsNotImplemented"
+    },
+    {
+      "criterion": "ADM-003-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#infoWithoutAuthorizationIsRejectedWith400NotThe401TheContractDeclares"
+    },
+    {
+      "criterion": "ADM-003-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#undeclaredPathIsNotFound"
+    },
+    {
+      "criterion": "ADM-003-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.ContractViolationResponseTest#methodNotAllowedCarriesNoAllowHeader"
+    },
+    {
+      "criterion": "ADM-003-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#acceptExcludingJsonIsNotAcceptable"
+    },
+    {
+      "criterion": "ADM-003-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#unexpectedContentTypeIsUnsupportedMediaType"
+    },
+    {
+      "criterion": "ADM-003-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.api.InboundAdmissionRuleTest#unimplementedResourceIsNotImplemented"
+    },
+    {
+      "criterion": "ADM-003-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.ContractViolationResponseTest#everyBodyIsTheSingleFieldShape"
+    },
+    {
+      "criterion": "ADM-003-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.ContractViolationResponseTest#businessNotFoundIsNotARoutingNotFound"
+    },
+    {
+      "criterion": "ADM-004-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#everyRequestIsAuditedAroundRouting"
+    },
+    {
+      "criterion": "ADM-004-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#aFailedRequestIsStillAudited"
+    },
+    {
+      "criterion": "ADM-004-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#theConfiguredBasePathIsApplied"
+    },
+    {
+      "criterion": "ADM-004-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#consoleTrafficIsNotAudited"
+    },
+    {
+      "criterion": "ADM-004-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#catchAllBodyIsTheSharedErrorShape"
+    },
+    {
+      "criterion": "ADM-004-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#auditedStatusMatchesTheStatusReturned"
+    },
+    {
+      "criterion": "ADM-004-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#perCallsiteAuditRecordBaselineIsBlocked"
+    },
+    {
+      "criterion": "AUD-001-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.RequestResponseAuditRecordTest#entryRecordCarriesTheFixedIdentity"
+    },
+    {
+      "criterion": "AUD-001-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.RequestResponseAuditRecordTest#bothCorrelationIdentifiersAreRecordedSeparately"
+    },
+    {
+      "criterion": "AUD-001-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.RequestResponseAuditRecordTest#identityAndUriAreRecorded"
+    },
+    {
+      "criterion": "AUD-001-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.RequestResponseAuditRecordTest#absentFieldsUseTheSentinelAndTheListDoesNot"
+    },
+    {
+      "criterion": "AUD-001-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.RequestResponseAuditRecordTest#clientIdIsNullWhenTheTokenPolicyDidNotRun"
+    },
+    {
+      "criterion": "AUD-001-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.RequestResponseAuditRecordTest#correlationIdFallbackIsUnreachableInPractice"
+    },
+    {
+      "criterion": "AUD-001-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.RequestResponseAuditRecordTest#timestampAndMillisAreIndependentReadings"
+    },
+    {
+      "criterion": "AUD-001-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#consoleConstructsNoAuditRecord"
+    },
+    {
+      "criterion": "AUD-001-i",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#auditConstructionFailureAbortsTheRequest"
+    },
+    {
+      "criterion": "AUD-001-j",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#entryAuditRecordBaselineIsBlocked"
+    },
+    {
+      "criterion": "AUD-002-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ResourcePathMaskerTest#alphabeticPathIsNotMasked"
+    },
+    {
+      "criterion": "AUD-002-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ResourcePathMaskerTest#billingAccountNumberSegmentIsMasked"
+    },
+    {
+      "criterion": "AUD-002-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ResourcePathMaskerTest#hyphenatedAlphabeticSegmentSurvives"
+    },
+    {
+      "criterion": "AUD-002-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ResourcePathMaskerTest#alphabeticAgencyCodeIsNotMasked"
+    },
+    {
+      "criterion": "AUD-002-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ResourcePathMaskerTest#emptySegmentsAreNotMasked"
+    },
+    {
+      "criterion": "AUD-002-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ResourcePathMaskerTest#firstSegmentIsConsumedWhenThereIsNoLeadingSeparator"
+    },
+    {
+      "criterion": "AUD-002-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ResourcePathMaskerTest#maskingIsPure"
+    },
+    {
+      "criterion": "AUD-002-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ResourcePathMaskerTest#rawUriKeepsTheIdentifierAndOnlyTheTemplateIsMasked"
+    },
+    {
+      "criterion": "AUD-003-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ImpersonationRuleTest#nestedActorIsImpersonated"
+    },
+    {
+      "criterion": "AUD-003-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ImpersonationRuleTest#flatActorIsImpersonatedUnderTheCompleteRule"
+    },
+    {
+      "criterion": "AUD-003-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ImpersonationRuleTest#flatActorStringNullIsNotAnActor"
+    },
+    {
+      "criterion": "AUD-003-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ImpersonationRuleTest#nestedActorStringNullIsStillImpersonated"
+    },
+    {
+      "criterion": "AUD-003-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ImpersonationRuleTest#noActorIsNotImpersonated"
+    },
+    {
+      "criterion": "AUD-003-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ImpersonationRuleTest#nestedActorDoesNotFallBackToFlatClaims"
+    },
+    {
+      "criterion": "AUD-003-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ImpersonationRuleTest#actorFieldsArePresentAndEmptyRatherThanAbsent"
+    },
+    {
+      "criterion": "AUD-003-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.ImpersonationRuleTest#theTwoStreamsDisagreeForAFlatActorToken"
+    },
+    {
+      "criterion": "AUD-004-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.AuditRecordCompletionTest#theClosedRecordCarriesStatusAndElapsedTime"
+    },
+    {
+      "criterion": "AUD-004-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.RequestResponseAuditRecordTest#elapsedTimeIsEpochPoisonedRatherThanFailing"
+    },
+    {
+      "criterion": "AUD-004-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#missingEntryRecordBaselineIsBlocked"
+    },
+    {
+      "criterion": "AUD-004-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.RequestResponseAuditRecordTest#undecidedStatusUsesTheAcceptedSentinel"
+    },
+    {
+      "criterion": "AUD-004-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#recordedStatusMatchesOnSuccess"
+    },
+    {
+      "criterion": "AUD-004-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#contractViolationsAreAuditedWithTheirOwnStatus"
+    },
+    {
+      "criterion": "AUD-004-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#auditCompletionFailureIsNotAbsorbed"
+    },
+    {
+      "criterion": "AUD-004-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.AuditRecordCompletionTest#maskingIsConfiguredRatherThanHardcoded"
+    },
+    {
+      "criterion": "AUD-005-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.EndpointAuditRecordTest#recordIdentifiesTheCallAndTheCaller"
+    },
+    {
+      "criterion": "AUD-005-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.EndpointAuditRecordTest#actorIsRecordedBesideTheRealSubject"
+    },
+    {
+      "criterion": "AUD-005-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.EndpointAuditRecordTest#omittedFieldsCarryTheSentinel"
+    },
+    {
+      "criterion": "AUD-005-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.EndpointAuditRecordTest#explicitNullCollapsesOntoAbsent"
+    },
+    {
+      "criterion": "AUD-005-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.EndpointAuditRecordTest#clientIdIsTheOneFieldWithoutADefault"
+    },
+    {
+      "criterion": "AUD-005-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.AuditRecordCompletionTest#theFivePerEndpointRecordsShareOneFieldSet"
+    },
+    {
+      "criterion": "AUD-005-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.AuditRecordCompletionTest#primaryAccountResourcesEmitNoPerEndpointRecord"
+    },
+    {
+      "criterion": "AUD-005-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.audit.EndpointAuditRecordTest#apiKeyHeaderIsCaptured"
+    },
+    {
+      "criterion": "AUD-006-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.StructuredAuditEventSinkTest#everyEntryIsJsonWithACorrelationIdAndATracePoint"
+    },
+    {
+      "criterion": "AUD-006-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.StructuredAuditEventSinkTest#aRequestIsReconstructableFromTheLogStream"
+    },
+    {
+      "criterion": "AUD-006-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.StructuredAuditEventSinkTest#configuredFieldsAreMasked"
+    },
+    {
+      "criterion": "AUD-006-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.StructuredAuditEventSinkTest#configuredFieldsAreSuppressed"
+    },
+    {
+      "criterion": "AUD-006-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.StructuredAuditEventSinkTest#soapEntriesAreRedactedInEveryEnvironment"
+    },
+    {
+      "criterion": "AUD-006-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.StructuredAuditEventSinkTest#anUnserialisablePayloadStillEmits"
+    },
+    {
+      "criterion": "AUD-006-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.audit.StructuredAuditEventSinkTest#emittingNeverMutatesWhatItLogs"
+    },
+    {
+      "criterion": "AUD-006-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#loggingStepFailureBaselineIsBlocked"
+    },
+    {
+      "criterion": "CFG-001-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.StartupConfigurationValidatorTest#refusesToStartWithNoEnvironmentSelected"
+    },
+    {
+      "criterion": "CFG-001-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.StartupConfigurationValidatorTest#unknownEnvironmentNameFailsRatherThanFallingBack"
+    },
+    {
+      "criterion": "CFG-001-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.EnvironmentProfileTest#eachEnvironmentResolvesItsOwnValues"
+    },
+    {
+      "criterion": "CFG-001-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.StartupConfigurationValidatorTest#anAbsentDeploymentValueFailsTheStartByName"
+    },
+    {
+      "criterion": "CFG-001-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.EnvironmentProfileTest#localResolvesEveryBackendUnlikeTheLegacy"
+    },
+    {
+      "criterion": "CFG-001-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.EnvironmentProfileTest#productionResponseTimeoutDiffersFromEveryLowerEnvironment"
+    },
+    {
+      "criterion": "CFG-001-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.EnvironmentProfileTest#stageStillPointsAtTheTestEsb"
+    },
+    {
+      "criterion": "CFG-001-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.EnvironmentProfileTest#unreferencedLegacyPropertiesAreCarriedForwardWithAReason"
+    },
+    {
+      "criterion": "CFG-002-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.EnvironmentProfileTest#noDeployedEnvironmentCommitsASecret"
+    },
+    {
+      "criterion": "CFG-002-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.StartupConfigurationValidatorTest#anAbsentSecretFailsTheStart"
+    },
+    {
+      "criterion": "CFG-002-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.EnvironmentProfileTest#theSharedLegacyCiphertextIsNotCarriedForward"
+    },
+    {
+      "criterion": "CFG-002-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.StartupConfigurationValidatorTest#anUnresolvedSecretReferenceFailsTheStart"
+    },
+    {
+      "criterion": "CFG-002-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.EnvironmentProfileTest#certificateValidationIsNeverDisabled"
+    },
+    {
+      "criterion": "CFG-002-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.EnvironmentProfileTest#bothBackendsAreTrustedByTheSameConfiguration"
+    },
+    {
+      "criterion": "CFG-002-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.EnvironmentProfileTest#trustMaterialCanRotateWithoutRebuildingTheArtifact"
+    },
+    {
+      "criterion": "CFG-002-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.StartupConfigurationValidatorTest#outboundTlsPostureIsStatedExplicitly"
+    },
+    {
+      "criterion": "CFG-002-i",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.config.StartupConfigurationValidatorTest#noClientCertificateIsEverPresented"
+    },
+    {
+      "criterion": "CON-001-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#consoleServesTheContractFromABootedService"
+    },
+    {
+      "criterion": "CON-001-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.ConsoleControllerTest#unknownConsolePathUsesTheSharedNotFoundBody"
+    },
+    {
+      "criterion": "CON-001-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.ConsoleControllerTest#otherConsoleFailuresFallThroughToDefaultHandling"
+    },
+    {
+      "criterion": "CON-001-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.ConsoleControllerTest#consoleStatusesAndTheAbsentCorrelationId"
+    },
+    {
+      "criterion": "CON-001-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.ConsoleControllerTest#consoleTrafficIsNotAudited"
+    },
+    {
+      "criterion": "CON-001-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.ConsoleControllerTest#productionServesNoConsole"
+    },
+    {
+      "criterion": "CON-001-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.ConsoleControllerTest#consolePathAndEnablementAreConfiguration"
+    },
+    {
+      "criterion": "DEP-001-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.DependencySurfaceTest#noMessagingClientOnTheDependencySet"
+    },
+    {
+      "criterion": "DEP-001-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.DependencySurfaceTest#noMessagingConfigurationIsDeclared"
+    },
+    {
+      "criterion": "DEP-001-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.DependencySurfaceTest#everyBackendInteractionIsSynchronous"
+    },
+    {
+      "criterion": "DEP-001-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.DependencySurfaceTest#noTransactionalMachineryIsDeclared"
+    },
+    {
+      "criterion": "ERR-001-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#failureBodyCarriesTheFiveFields"
+    },
+    {
+      "criterion": "ERR-001-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#absentCauseIsANullValuedKey"
+    },
+    {
+      "criterion": "ERR-001-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#emittedBodyDivergesFromThePublishedFaultType"
+    },
+    {
+      "criterion": "ERR-001-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#errorTypeStaysNested"
+    },
+    {
+      "criterion": "ERR-001-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#rawCauseStaysInTheBodyAndMaskingAppliesToTheLog"
+    },
+    {
+      "criterion": "ERR-001-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#statusDerivationSurvivesTheBodyBeingBuiltFirst"
+    },
+    {
+      "criterion": "ERR-001-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#aFailureInsideFailureHandlingIsContainedAndCounted"
+    },
+    {
+      "criterion": "ERR-001-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#backendFailureBodyBaselineIsBlocked"
+    },
+    {
+      "criterion": "ERR-002-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.failure.FailureStatusRuleTest#backendStatusIsRelayedVerbatim"
+    },
+    {
+      "criterion": "ERR-002-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.failure.FailureStatusRuleTest#noUpstreamStatusIsFiveHundred"
+    },
+    {
+      "criterion": "ERR-002-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.failure.FailureStatusRuleTest#relayedAuthStatusesAreCounted"
+    },
+    {
+      "criterion": "ERR-002-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.failure.FailureStatusRuleTest#relayedNotFoundIsCounted"
+    },
+    {
+      "criterion": "ERR-002-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.failure.FailureStatusRuleTest#nonNumericStatusDoesNotRaiseASecondFailure"
+    },
+    {
+      "criterion": "ERR-002-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.failure.FailureStatusRuleTest#twoHundredWithAFaultBodyIsNotAFailurePath"
+    },
+    {
+      "criterion": "ERR-003-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#unhandledFailuresAreShapedByTheSharedPresentation"
+    },
+    {
+      "criterion": "ERR-003-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#everyFailureClassIsHandledTheSameWay"
+    },
+    {
+      "criterion": "ERR-003-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#auditIsCompletedBeforeTheErrorPresentationIsWritten"
+    },
+    {
+      "criterion": "ERR-003-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#endpointsAbsorbTheirOwnBackendFailures"
+    },
+    {
+      "criterion": "ERR-003-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.MainFunnelTest#onlyFunnelLevelFailuresReachTheCatchAll"
+    },
+    {
+      "criterion": "ERR-003-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#sharedUnitsInheritTheCallersHandling"
+    },
+    {
+      "criterion": "ERR-003-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#unhandledFailureResponseBaselineIsBlocked"
+    },
+    {
+      "criterion": "ERR-003-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.application.failure.FailurePresentationTest#theSharedErrorHandlerContractIsReportedAsBlocked"
+    },
+    {
+      "criterion": "INF-001-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#infoReportsRealBuildProvenance"
+    },
+    {
+      "criterion": "INF-001-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.InfoEndpointTest#unavailableMetadataStillAnswers"
+    },
+    {
+      "criterion": "INF-001-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.InfoEndpointTest#unsubstitutedTokensFailTheBuild"
+    },
+    {
+      "criterion": "INF-001-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.InfoEndpointTest#infoRequiresABearerToken"
+    },
+    {
+      "criterion": "INF-001-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#infoTimestampCarriesAnExplicitOffset"
+    },
+    {
+      "criterion": "INF-001-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#infoResponseBaselineIsBlocked"
+    },
+    {
+      "criterion": "INF-001-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.InfoEndpointTest#infoTouchesNoBackendAndMintsNoAssertion"
+    },
+    {
+      "criterion": "PAR-001-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#externalAccountViewBaselineIsBlocked"
+    },
+    {
+      "criterion": "PAR-001-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#agencyWorklistBaselineIsBlocked"
+    },
+    {
+      "criterion": "PAR-001-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#absorbedFailureBaselineIsBlocked"
+    },
+    {
+      "criterion": "PAR-001-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#twoZeroFourBodyCensusIsBlocked"
+    },
+    {
+      "criterion": "PAR-001-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#bcmsAccountSummaryBaselineIsBlocked"
+    },
+    {
+      "criterion": "PAR-001-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#everyBaselineCarriesItsProvenance"
+    },
+    {
+      "criterion": "PAR-001-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#vacuousAndStaleLegacyFixturesAreExcluded"
+    },
+    {
+      "criterion": "PAR-001-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#noCustomerDataHasBeenCapturedWithoutTreatment"
+    },
+    {
+      "criterion": "PAR-002-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#auditRecordSuccessBaselineIsBlocked"
+    },
+    {
+      "criterion": "PAR-002-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#impersonationCaseBaselinesAreBlocked"
+    },
+    {
+      "criterion": "PAR-002-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#maskedPathBaselinesAreBlocked"
+    },
+    {
+      "criterion": "PAR-002-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#contractViolationBaselinesAreBlocked"
+    },
+    {
+      "criterion": "PAR-002-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#unhandledFailureBaselineIsBlocked"
+    },
+    {
+      "criterion": "PAR-002-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#staleStatusBaselineIsBlocked"
+    },
+    {
+      "criterion": "PAR-002-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#auditRecordCompletionBaselineIsBlocked"
+    },
+    {
+      "criterion": "PAR-002-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#sharedLoggingSideEffectBaselineIsBlocked"
+    },
+    {
+      "criterion": "PAR-002-i",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#noIdentityBearingBaselineHasBeenStored"
+    },
+    {
+      "criterion": "SEC-001-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#nonBearerAuthorizationHeaderIsRejectedWith401"
+    },
+    {
+      "criterion": "SEC-001-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#infoWithoutAuthorizationIsRejectedWith400NotThe401TheContractDeclares"
+    },
+    {
+      "criterion": "SEC-001-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.SecurityRequiresTokenTest#decodedClaimsReachTheAuditProjection"
+    },
+    {
+      "criterion": "SEC-001-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.SecurityRequiresTokenTest#clientIdIsNullWhileNeighboursSayEmpty"
+    },
+    {
+      "criterion": "SEC-001-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.in.web.SecurityRequiresTokenTest#apiIdentityIsPerEnvironment"
+    },
+    {
+      "criterion": "SEC-001-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#tokenRejectionBaselineIsBlocked"
+    },
+    {
+      "criterion": "SEC-002-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#unentitledCallerIsDeniedOnPastDueToday"
+    },
+    {
+      "criterion": "SEC-002-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#unentitledCallerIsDeniedOnPendingCancelToday"
+    },
+    {
+      "criterion": "SEC-002-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#entitledCallerWorklistBaselineIsBlocked"
+    },
+    {
+      "criterion": "SEC-002-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#absentAgencyClaimDeniesOnBothWorklists"
+    },
+    {
+      "criterion": "SEC-002-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.security.AgencyEntitlementTest#logOnlyModeServesAndCountsTheExposure"
+    },
+    {
+      "criterion": "SEC-002-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.domain.security.AgencyEntitlementTest#entitlementsAreAuditedUnchangedInEitherMode"
+    },
+    {
+      "criterion": "TOK-001-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProviderTest#credentialsComeFromTheStoreAndNotFromTheArtifact"
+    },
+    {
+      "criterion": "TOK-001-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProviderTest#rotationTakesEffectWithoutRedeploy"
+    },
+    {
+      "criterion": "TOK-001-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProviderTest#exactlyTwoSecretNamesAreConsulted"
+    },
+    {
+      "criterion": "TOK-001-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProviderTest#unresolvableSecretIsAttributableToCredentialResolution"
+    },
+    {
+      "criterion": "TOK-001-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProviderTest#anUnreachableStoreFailsUniformly"
+    },
+    {
+      "criterion": "TOK-001-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProviderTest#credentialsAreClearedAfterTheExchange"
+    },
+    {
+      "criterion": "TOK-001-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProviderTest#neitherCredentialEverReachesALogEntry"
+    },
+    {
+      "criterion": "TOK-001-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.vault.ThycoticCredentialProviderTest#theStoreCertificateIsValidated"
+    },
+    {
+      "criterion": "TOK-002-a",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.sts.SamlAssertionAcquisitionTest#theAssertionIsObtainedFirst"
+    },
+    {
+      "criterion": "TOK-002-b",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.sts.SamlAssertionAcquisitionTest#audienceIsScopedPerEnvironment"
+    },
+    {
+      "criterion": "TOK-002-c",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.sts.SamlAssertionAcquisitionTest#theAssertionIsPresentedInAMustUnderstandSecurityHeader"
+    },
+    {
+      "criterion": "TOK-002-d",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#malformedStsResponseWasBaselineIsBlocked"
+    },
+    {
+      "criterion": "TOK-002-e",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.testsupport.ParityEvidenceTest#malformedStsResponseEsbBaselineIsBlocked"
+    },
+    {
+      "criterion": "TOK-002-f",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.sts.SamlAssertionAcquisitionTest#assertionValidityIsCheckedOnlyWhereACacheCouldOutliveIt"
+    },
+    {
+      "criterion": "TOK-002-g",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.sts.SamlAssertionAcquisitionTest#zeroTtlMintsPerRequest"
+    },
+    {
+      "criterion": "TOK-002-h",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.sts.SamlAssertionAcquisitionTest#nonZeroTtlMintsOnce"
+    },
+    {
+      "criterion": "TOK-002-i",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.sts.SamlAssertionAcquisitionTest#aSlowTokenServiceIsBounded"
+    },
+    {
+      "criterion": "TOK-002-j",
+      "verdict": "pass",
+      "test": "test:com.westfield.api.billing.edge.adapter.out.sts.SamlAssertionAcquisitionTest#stsFailureIsDistinguishableFromABackendFailure"
+    }
+  ],
+  "coverage": {
+    "criteria_total": 185,
+    "criteria_with_verdict": 185,
+    "untested": []
+  },
+  "parity": {
+    "golden_sets_replayed": 0,
+    "divergences": [
+      {
+        "flow": "agency worklist entitlement (GET /pastDueToday/{agencyCode}, GET /pendingCancelToday/{agencyCode})",
+        "field": "agencyCodes claim authorisation",
+        "mule_value": "not compared \u2014 agencyCodes captured into the requestResponseLog audit variable only (archive/sapi-billing/src/main/mule/responseLogFlow.xml L24: agencyCode: (authentication.properties.userProperties.agencyCodes default [])); every authenticated caller served regardless of the claim",
+        "java_value": "AgencyEntitlementRule enforces a normalised (trim + uppercase) exact-match of the path {agencyCode} against the caller's agencyCodes claim; unentitled callers denied 403. New behaviour \u2014 the legacy had no entitlement check (ADR-0037 DEF-0106 amendment)",
+        "sanctioned": true,
+        "adr": "adr:0037"
+      }
+    ]
+  },
+  "nfr_probes": [
+    {
+      "capability": "CAP-004",
+      "target": "TOK-002-i / ADR-0014: STS call bounded by billing.backend.sts.response-timeout (700ms configured vs 10000ms stub delay); elapsed < 5000ms",
+      "measured": "BackendAssertionException thrown; elapsed < 5000ms against 700ms configured timeout and 10000ms stub delay \u2014 bounded wait, not unbounded",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5NfrProbeTest#theStsCallIsBoundedByItsConfiguredTimeout"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "TOK-001-e / ADR-0014/ADR-0008: Vault call bounded by billing.backend.vault.response-timeout (700ms); elapsed < 5000ms",
+      "measured": "CredentialResolutionException thrown naming billing.username; elapsed < 5000ms \u2014 bounded wait",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5NfrProbeTest#theVaultCallIsBoundedByItsConfiguredTimeout"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "TOK-001-d/g: credential-resolution failure names the secret (billing.username) and never the credential value",
+      "measured": "exception message contains billing.username and 503; no credential value leaked",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5NfrProbeTest#aCredentialFailureNamesTheSecretNotItsValue"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "TOK-001-c: exactly two legacy secret names consulted \u2014 billing.username and billing.password",
+      "measured": "exactly 2 serve events with URLs /vault/secrets/billing.username and /vault/secrets/billing.password, in any order",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5NfrProbeTest#exactlyTwoSecretsAreConsulted"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "TOK-001-b / ADR-0008: rotated credential takes effect after 60s cache TTL with no redeploy",
+      "measured": "cached value served within TTL; rotated value served after evict() with no restart",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5NfrProbeTest#aRotatedCredentialTakesEffectAfterTheCacheWindow"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "TOK-001-f: credential object wiped on close; credential value absent from toString()",
+      "measured": "isCleared true after close(); toString() does not contain 's3cret'",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5NfrProbeTest#theCredentialIsWipedOnClose"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "ERR-001-e per accepted ADR-0015: raw cause reaches caller unredacted (criterion text is stale vs the accepted ADR \u2014 DEF-0107 sanctioned_divergence, linked_adr adr:0015)",
+      "measured": "errorCause contains wassvcu.westfieldgrp.corp and 1234567890 verbatim; correlationId corr-1234 \u2014 raw cause unredacted in the body, exactly as ADR-0015 requires and the legacy behaved",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5FailurePresentationProbeTest#theRawCauseIsReturnedToTheCallerUnredacted"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "ERR-001-a/b/d: failure body keeps legacy 5-field shape with key order faultActor,errorDesc,errorType,errorCause,correlationId; errorCause present as null value",
+      "measured": "keys containExactly the 5 fields in order; errorCause present with null value; errorType nested namespace/identifier",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5FailurePresentationProbeTest#theFailureBodyKeepsItsLegacyShape"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "ERR-001-c / ADM-003-g: emitted body is NOT the legacy RAML commonError fault type",
+      "measured": "body does not contain faultCode/faultMessage/faultDetail/faultTime/innerFault",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5FailurePresentationProbeTest#theEmittedBodyIsNotThePublishedFaultType"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "ERR-002-a/b/e per ADR-0033: backend status relayed verbatim; absent/non-numeric -> 500",
+      "measured": "404->404, 401->401, 403->403, null->500, non-numeric->500",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5FailurePresentationProbeTest#statusDerivationFollowsAdr0033"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "ERR-002-c per ADR-0033: failure origin attributable even when status is relayed",
+      "measured": "401->UPSTREAM_ESB, null->THIS_SERVICE",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5FailurePresentationProbeTest#theFailureOriginIsRecorded"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "ERR-003-h per ADR-0016: presenter declares ASSUMED contract blocked on R-013; no 597/598/599 invented (ADR-0042)",
+      "measured": "ASSUMED_CONTRACT true, ASSUMPTION_RISK R-013, UNMAPPED_DECLARED_TIMEOUT_STATUSES [597,598,599]",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5FailurePresentationProbeTest#theUnhandledFailurePresenterIsStillAnAssumedContract"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "TOK-001-h / CFG-002-e: Thycotic client uses the truststore configured at billing.truststore.location (DEF-0105 fixed)",
+      "measured": "vault client sslContext is NOT SSLContext.getDefault() \u2014 configured truststore IS loaded and used (DEF-0105 fixed; OutboundTrustMaterial builds the SSLContext)",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#theVaultClientUsesTheConfiguredTruststore"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "CFG-002-e/f: STS client uses the configured trust material (DEF-0105 fixed)",
+      "measured": "STS client sslContext is NOT SSLContext.getDefault() \u2014 both backends trusted by the same configured truststore (DEF-0105 fixed)",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#theStsClientUsesTheConfiguredTruststore"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "CFG-002-e/f/g, TOK-001-h: a single main/ class loads the KeyStore and builds the SSLContext (structural corroboration, DEF-0105 fixed)",
+      "measured": "OutboundTrustMaterial.java present in src/main/java and is the single place referencing KeyStore/SSLContext/TrustManagerFactory (DEF-0105 fixed)",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#aProductionClassNowLoadsTheTruststore"
+    },
+    {
+      "capability": "CAP-004",
+      "target": "CFG-002-i: no client certificate is presented (configured truststore is trust-only)",
+      "measured": "truststore.isClientCertificate() false; STS client authenticator empty \u2014 no client identity offered on mutual-TLS",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5OutboundTrustProbeTest#noClientCertificateIsPresented"
+    },
+    {
+      "capability": "CAP-002",
+      "target": "SEC-002 / ADR-0037: exemption expiry is consulted and enforced, boundary-inclusive (DEF-0108 fixed)",
+      "measured": "2020-01-01 expired exemption DENIED; future-dated exemption EXEMPT; expiring-TODAY exemption EXEMPT (boundary-inclusive) \u2014 DEF-0108 fixed",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#anExpiredExemptionIsDenied"
+    },
+    {
+      "capability": "CAP-002",
+      "target": "SEC-002 / ADR-0037: exemption is a full bypass, not a widening",
+      "measured": "exempt caller with empty agency claim -> EXEMPT",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#anExemptionBypassesTheClaimEntirely"
+    },
+    {
+      "capability": "CAP-002",
+      "target": "SEC-002-e: log-only mode serves unentitled request rather than denying",
+      "measured": "unentitled enforcing->DENIED, non-enforcing->UNENTITLED_SERVED",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#logOnlyModeServesTheUnentitledRequest"
+    },
+    {
+      "capability": "CAP-002",
+      "target": "SEC-002-d: request with no decoded token denied when enforcing",
+      "measured": "null caller -> DENIED when enforcing",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#aRequestWithNoTokenContextIsDenied"
+    },
+    {
+      "capability": "CAP-012",
+      "target": "INF-001-a/c: /info carries build provenance from META-INF/build-info.properties; build declares the build-info goal (DEF-0109 fixed)",
+      "measured": "packaged jar contains build-info.properties; pom contains 'build-info' and 'enforcer' (DEF-0109 fixed, ADR-0018)",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#thePackagedArtifactCarriesBuildMetadata"
+    },
+    {
+      "capability": "CAP-012",
+      "target": "INF-001-c: build fails if an unsubstituted token would reach the artifact (DEF-0109 fixed)",
+      "measured": "pom contains maven-enforcer-plugin (toolchain guard) and build-info is generated by the build (not a checked-in file with unsubstituted @..@/${..} tokens) \u2014 DEF-0109 fixed",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#aBuildStepEnforcesTokenSubstitution"
+    },
+    {
+      "capability": "CAP-011",
+      "target": "CFG-001-c/d: prod profile ${BILLING_*} placeholders supplied by kustomize deployment manifests (DEF-0110 fixed)",
+      "measured": "0 unsupplied placeholders \u2014 every ${BILLING_*} name application-prod.yaml reads (BILLING_BASE_PATH, BILLING_SAML_AUDIENCE, BILLING_ESB_HOST, BILLING_WAS_HOST, BILLING_STS_HOST, BILLING_VAULT_HOST, BILLING_TRUSTSTORE_LOCATION, BILLING_TRUSTSTORE_PASSWORD, BILLING_JWT_ISSUER_URI) is set by a kustomize manifest (DEF-0110 fixed)",
+      "verdict": "pass",
+      "method": "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#theDeploymentManifestsSupplyThePropertiesTheProfilesRead"
+    }
+  ]
+}

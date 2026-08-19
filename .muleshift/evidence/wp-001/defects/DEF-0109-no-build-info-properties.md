@@ -23,16 +23,17 @@ reproduction: >
   @DisplayNames: "the packaged jar carries no build-info.properties, so /info can only report
   defaults" and "nothing fails the BUILD when an unsubstituted token would reach the artifact".
 evidence:
-  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#thePackagedArtifactCarriesNoBuildMetadata"
-  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#noBuildStepEnforcesTokenSubstitution"
-  - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#infoCannotIdentifyTheBuildItIsRunning"
-  - "evidence:run-s5-billing-edge-8f2eec88"
+  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#thePackagedArtifactCarriesBuildMetadata"
+  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#aBuildStepEnforcesTokenSubstitution"
+  - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#infoReportsRealBuildProvenance"
+  - "evidence:run-s5-billing-edge-r2-e7876edf"
+  - "commit:e7876edf4194a32042d19d11a5abdce4447aad3e"
   - "adr:ADR-0018"
 traces_to:
   - "km:node/N-0043"
-  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#thePackagedArtifactCarriesNoBuildMetadata"
-  - "evidence:run-s5-billing-edge-8f2eec88"
-status: open
+  - "test:com.westfield.api.billing.edge.s5.S5ProvenanceAndExemptionProbeTest#thePackagedArtifactCarriesBuildMetadata"
+  - "evidence:run-s5-billing-edge-r2-e7876edf"
+status: resolved
 blocks_gate: false
 triage:
   round: 2
@@ -44,6 +45,8 @@ triage:
     build-time guard do not. This is an operational/observability regression (an unidentifiable
     build in production), not a security or data issue. Autonomously fixable by a java-engineer
     re-dispatch (build config). Round 2 of the bounded loop.
+
+    **Resolution (S5 round-2):** Fix verified green in S5 round-2 (run-s5-billing-edge-r2-e7876edf, commit e7876edf4194a32042d19d11a5abdce4447aad3e) by S5ProvenanceAndExemptionProbeTest#thePackagedArtifactCarriesBuildMetadata + #aBuildStepEnforcesTokenSubstitution (surefire) and S5BootedEdgeIT#infoReportsRealBuildProvenance (failsafe, INF-001-a — /info now reports real build provenance, not '0'/'--' defaults). Status advanced open→resolved by migration-architect S6 reconciliation. Not closed: closure is the S7/human gate's call.
   action: >
     Re-dispatch to java-service-engineer (billing-edge): add the spring-boot-maven-plugin
     build-info goal execution to the build (so META-INF/build-info.properties is generated and
@@ -100,7 +103,8 @@ surprise. INF-001-a (build provenance at /info), INF-001-c (build fails on unsub
 ## Disposition
 
 Class: **implementation** (build configuration). Re-dispatch to the billing-edge java-service-engineer.
-Round 2 of the bounded loop. Status remains **open**.
+Round 2 of the bounded loop. **Status: resolved** — fix verified green in S5 round-2
+(run-s5-billing-edge-r2-e7876edf); closure is the S7/human gate's call, not S6's.
 
 ## Trace chain
 
