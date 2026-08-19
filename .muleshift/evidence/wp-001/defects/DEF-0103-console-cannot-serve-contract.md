@@ -24,11 +24,13 @@ evidence:
   - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#consoleCannotResolveTheContractFromABootedService"
   - "evidence:run-s5-billing-edge-8f2eec88"
   - "adr:ADR-0038"
+  - "evidence:run-s5-billing-edge-r3-e7876edf"
+  - "commit:e7876edf4194a32042d19d11a5abdce4447aad3e"
 traces_to:
   - "km:node/N-0031"
   - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#consoleCannotResolveTheContractFromABootedService"
   - "evidence:run-s5-billing-edge-8f2eec88"
-status: open
+status: resolved
 blocks_gate: false
 triage:
   round: 2
@@ -43,6 +45,18 @@ triage:
     production (ADR-0038), so there is no security or PII exposure — this is a developer-experience
     and contract-visibility gap in non-prod. Autonomously fixable by a java-engineer re-dispatch.
     Round 2 of the bounded loop.
+
+    **Resolution (S5 round-3):** Fix verified green in S5 round-3 (run-s5-billing-edge-r3-e7876edf,
+    commit e7876edf4194a32042d19d11a5abdce4447aad3e). The frozen contract is packaged into the artifact at
+    src/main/resources/contracts/billing-edge/openapi.yaml (byte-identical to contracts/billing-edge/openapi.yaml)
+    and billing.console.contract-location defaults to classpath:contracts/billing-edge/openapi.yaml
+    (BillingEdgeProperties.Console.contractLocation), so ConsoleController resolves it from a booted
+    process regardless of the working directory. ADR-0038 preserved: the console stays disabled in
+    production (application-prod.yaml: billing.console.enabled=false, verified by
+    S5ProdProfileIT#theConsoleIsNotServedInProduction). Green test:
+    S5BootedEdgeIT#consoleServesTheContractFromABootedService (failsafe, CON-001-a — /console returns
+    200 with the published contract body served as browsable documentation). Status advanced
+    open→resolved. Not closed: closure is the S7/human gate's call.
   action: >
     Re-dispatch to java-service-engineer (billing-edge): package contracts/billing-edge/openapi.yaml
     into the artifact (src/main/resources/contracts/) and change the console's contract-location

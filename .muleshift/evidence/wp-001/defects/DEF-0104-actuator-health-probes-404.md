@@ -23,11 +23,13 @@ evidence:
   - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#actuatorHealthProbesAreSwallowedByTheAdmissionFilter"
   - "test:com.westfield.api.billing.edge.s5.S5ProdProfileIT#actuatorProbesAre404InProductionAsWell"
   - "evidence:run-s5-billing-edge-8f2eec88"
+  - "evidence:run-s5-billing-edge-r3-e7876edf"
+  - "commit:e7876edf4194a32042d19d11a5abdce4447aad3e"
 traces_to:
   - "km:node/N-0001"
   - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#actuatorHealthProbesAreSwallowedByTheAdmissionFilter"
   - "evidence:run-s5-billing-edge-8f2eec88"
-status: open
+status: resolved
 blocks_gate: false
 triage:
   round: 2
@@ -40,6 +42,18 @@ triage:
     from the admission filter, or mount actuator on a separate management port/context-path not
     subject to InboundValidationFilter. Autonomously fixable by a java-engineer re-dispatch. Round 2
     of the bounded loop.
+
+    **Resolution (S5 round-3):** Fix verified green in S5 round-3 (run-s5-billing-edge-r3-e7876edf,
+    commit e7876edf4194a32042d19d11a5abdce4447aad3e). InboundValidationFilter bypasses /actuator/** (isActuator) so the k8s
+    readiness/liveness probes reach Spring's actuator endpoint instead of being 404'd by the
+    ApiResourceTable admission rule. Only health is exposed on the main listener (application.yaml:
+    management.endpoints.web.exposure.include=health, management.endpoint.health.probes.enabled=true),
+    so no new API surface is opened and the sensitive actuator endpoints stay unexposed. The probes
+    answer 200 on port 8081 (server.port — the port kustomize/base/deployment.yaml declares its
+    readinessProbe/livenessProbe against). Green tests: S5BootedEdgeIT#actuatorHealthProbesAreServedByTheActuator
+    (failsafe — /actuator/health/readiness, /actuator/health/liveness and /actuator/health each 200)
+    and S5ProdProfileIT#actuatorProbesAreServedInProductionAsWell (failsafe — 200 under the prod
+    profile). Status advanced open→resolved. Not closed: closure is the S7/human gate's call.
   action: >
     Re-dispatch to java-service-engineer (billing-edge): route /actuator/** (or the configured
     management paths) outside InboundValidationFilter (bypass the ApiResourceTable admission check

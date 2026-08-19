@@ -21,11 +21,13 @@ reproduction: >
 evidence:
   - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#theConfiguredBasePathIsNeverApplied"
   - "evidence:run-s5-billing-edge-8f2eec88"
+  - "evidence:run-s5-billing-edge-r3-e7876edf"
+  - "commit:e7876edf4194a32042d19d11a5abdce4447aad3e"
 traces_to:
   - "mule:flow/sapi-billing-search-main"
   - "test:com.westfield.api.billing.edge.s5.S5BootedEdgeIT#theConfiguredBasePathIsNeverApplied"
   - "evidence:run-s5-billing-edge-8f2eec88"
-status: open
+status: resolved
 blocks_gate: false
 triage:
   round: 2
@@ -37,6 +39,20 @@ triage:
     is unsatisfied. This is a routing/deployment divergence from the legacy listener path; no data
     or security exposure. Autonomously fixable by a java-engineer re-dispatch. Round 2 of the
     bounded loop.
+
+    **Resolution (S5 round-3):** Fix verified green in S5 round-3 (run-s5-billing-edge-r3-e7876edf,
+    commit e7876edf4194a32042d19d11a5abdce4447aad3e). BasePathFilter (adapter/in/web) applies billing.api.base-path: a request
+    whose path begins with the configured base path has the prefix stripped before routing, so
+    /sapi-billing/v1/info routes to the same controller as /info and the legacy local listener path
+    /sapi-billing/v1 is preserved (application-local.yaml: billing.api.base-path=/sapi-billing/v1).
+    The root continues to resolve too — the alias form of "apply it to the mappings" the packet
+    permits, which keeps every acceptance criterion and probe that addresses the root green. No
+    collision with DEF-0104: BasePathFilter only strips the configured /sapi-billing/v1 prefix, and
+    the actuator bypass in InboundValidationFilter keys off the raw /actuator/** path, so the
+    /actuator/health/** probes are unaffected by the base-path strip. Green test:
+    S5BootedEdgeIT#theConfiguredBasePathIsApplied (failsafe, ADM-004-c — /sapi-billing/v1/info returns
+    200, the configured base path resolves). Status advanced open→resolved. Not closed: closure is
+    the S7/human gate's call.
   action: >
     Re-dispatch to java-service-engineer (billing-edge): bind billing.api.base-path to
     server.servlet.context-path (or apply it to the request mappings) so the service serves at the
